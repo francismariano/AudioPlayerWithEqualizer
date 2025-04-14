@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "AudioPlayerWithEqualizer"
 include(":app")
+include(":playbackmodule")
