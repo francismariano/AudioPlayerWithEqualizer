@@ -1,4 +1,4 @@
-package me.francis.mylibrary
+package me.francis.playbackmodule
 
 import org.junit.Test
 

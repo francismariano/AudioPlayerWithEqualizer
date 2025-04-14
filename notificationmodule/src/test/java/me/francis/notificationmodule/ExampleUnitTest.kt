@@ -1,4 +1,4 @@
-package me.francis.playbackmodule2
+package me.francis.notificationmodule
 
 import org.junit.Test
 

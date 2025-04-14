@@ -1,4 +1,4 @@
-package me.francis.equalizationmodule2
+package me.francis.equalizationmodule
 
 import org.junit.Test
 
