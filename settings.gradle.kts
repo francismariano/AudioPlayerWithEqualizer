@@ -23,3 +23,4 @@ rootProject.name = "AudioPlayerWithEqualizer"
 include(":app")
 include(":playbackmodule")
 include(":equalizationmodule")
+include(":notificationmodule")
