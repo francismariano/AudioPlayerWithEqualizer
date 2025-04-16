@@ -25,9 +25,9 @@ class AudioService(context: Context) : Service(), PlaybackModule {
 
     override fun setVolume(volume: Float) = playbackModule.setVolume(volume)
 
-    override fun skipToNext() = playbackModule.skipToNext()
+    override fun skipToNext(path: String) = playbackModule.skipToNext(path)
 
-    override fun skipToPrevious() = playbackModule.skipToPrevious()
+    override fun skipToPrevious(path: String) = playbackModule.skipToPrevious(path)
 
     override val currentPosition: StateFlow<Int>
         get() = playbackModule.currentPosition

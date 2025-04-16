@@ -48,7 +48,7 @@ internal fun MediaPlayerUI(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = playerViewModel::previousTrack) {
+            IconButton(onClick = {}) { //playerViewModel::previousTrack) {
                 Icon(
                     painter = painterResource(R.drawable.previous),
                     contentDescription = "Faixa anterior",
@@ -66,7 +66,7 @@ internal fun MediaPlayerUI(
                 )
             }
 
-            IconButton(onClick = playerViewModel::nextTrack) {
+            IconButton(onClick = {}) { //playerViewModel::nextTrack) {
                 Icon(
                     painter = painterResource(R.drawable.next),
                     contentDescription = "Próxima faixa",

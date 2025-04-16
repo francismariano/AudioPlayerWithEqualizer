@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import me.francis.audioplayerwithequalizer.navigation.NavManager
 import me.francis.audioplayerwithequalizer.ui.theme.AudioPlayerWithEqualizerTheme
 import me.francis.audioplayerwithequalizer.viewModels.PlayerViewModel
@@ -24,7 +25,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     // view model
-                    val playerViewModel = PlayerViewModel()
+                    val playerViewModel = PlayerViewModel(context = LocalContext.current)
 
                     // navigation
                     NavManager(playerViewModel = playerViewModel)
