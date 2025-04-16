@@ -118,12 +118,14 @@ class PlaybackModuleImpl(context: Context) : PlaybackModule {
         }
     }
 
-    override fun skipToNext() {
-        TODO("Not yet implemented")
+    override fun skipToNext(path: String) {
+        setDataSource(path)
+        play()
     }
 
-    override fun skipToPrevious() {
-        TODO("Not yet implemented")
+    override fun skipToPrevious(path: String) {
+        setDataSource(path)
+        play()
     }
 
     override fun setVolume(volume: Float) {
