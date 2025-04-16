@@ -1,8 +1,12 @@
 package me.francis.audioplayerwithequalizer.viewModels
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
+import me.francis.audioplayerwithequalizer.services.AudioService
 
-class PlayerViewModel() : ViewModel() {
+class PlayerViewModel(context: Context) : ViewModel() {
+
+    private val audioService = AudioService(context = context)
 
     // todo: reaproveitar para estados da aplicação (play/pause, etc)
 //    private val _uiUserListState = MutableStateFlow(UserListUiState())
@@ -26,14 +30,18 @@ class PlayerViewModel() : ViewModel() {
 //    }
 
     fun playPause() {
-        println("*** play pause")
+        if (audioService.isPlaying.value) {
+            audioService.pause()
+        } else {
+            audioService.play()
+        }
     }
 
     fun previousTrack() {
-        println("*** previous track")
+        audioService.skipToPrevious()
     }
 
     fun nextTrack() {
-        println("*** next track")
+        audioService.skipToNext()
     }
 }

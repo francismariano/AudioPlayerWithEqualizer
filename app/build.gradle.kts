@@ -57,4 +57,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     // nav controller
     implementation(libs.navigation)
+    // modules
+    implementation(project(":playbackmodule"))
 }
