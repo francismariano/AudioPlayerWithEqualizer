@@ -12,6 +12,7 @@ interface PlaybackModule {
     fun setVolume(volume: Float)
     fun skipToNext(path: String)
     fun skipToPrevious(path: String)
+    fun release()
 
     // Propriedades
     val currentPosition: StateFlow<Int>

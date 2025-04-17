@@ -1,6 +1,5 @@
 package me.francis.playbackmodule
 
-import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import kotlinx.coroutines.CoroutineScope
@@ -16,7 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
 
-class PlaybackModuleImpl(context: Context) : PlaybackModule {
+class PlaybackModuleImpl : PlaybackModule {
     private val mediaPlayer: MediaPlayer = MediaPlayer().apply {
         setAudioAttributes(
             AudioAttributes.Builder()
@@ -145,11 +144,12 @@ class PlaybackModuleImpl(context: Context) : PlaybackModule {
         } catch (e: IOException) {
             _playbackEvents.tryEmit(PlaybackEvent.Error("Falha ao carregar arquivo: ${e.message}"))
         } catch (e: IllegalStateException) {
+            e.printStackTrace()
             _playbackEvents.tryEmit(PlaybackEvent.Error("Player em estado inválido"))
         }
     }
 
-    fun release() {
+    override fun release() {
         stop()
         mediaPlayer.release()
         positionUpdateJob?.cancel()
