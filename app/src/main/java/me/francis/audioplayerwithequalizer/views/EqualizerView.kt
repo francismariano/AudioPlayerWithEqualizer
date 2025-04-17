@@ -110,7 +110,7 @@ internal fun GraphicEqualizer(
                             updateFrequency = updateFrequency,
                             modifier = Modifier
                                 .padding(horizontal = 1.dp)
-                                .fillMaxHeight(fraction = .75f)
+                                .fillMaxHeight()
                                 .width(45.dp)
                                 .zIndex(-1f)
                         )

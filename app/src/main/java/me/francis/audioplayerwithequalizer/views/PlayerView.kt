@@ -5,12 +5,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,7 +26,7 @@ import me.francis.audioplayerwithequalizer.viewModels.PlayerViewModel
 
 @Composable
 internal fun MediaPlayerUI(
-    songTitle: String,
+    songTitle: String?,
     isPlaying: Boolean,
     navController: NavController,
     playerViewModel: PlayerViewModel,
@@ -37,20 +39,44 @@ internal fun MediaPlayerUI(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = songTitle,
+            text = "Nome da música", // songTitle ?: "Nenhuma música tocando",
             style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+        // Tempo + Slider
+        Column(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            IconButton(
-                onClick = { playerViewModel.skipToPrevious("") }
+            Slider(
+                value = .5f,
+                onValueChange = { newValue ->
+                    playerViewModel.seekTo(0)
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                Text(formatTime(0))
+                Text(formatTime(3))
+            }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Controles
+        Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            IconButton(onClick = { playerViewModel.skipToPrevious("") }) {
                 Icon(
                     painter = painterResource(R.drawable.previous),
                     contentDescription = "Faixa anterior",
@@ -60,15 +86,13 @@ internal fun MediaPlayerUI(
 
             IconButton(onClick = playerViewModel::playPause) {
                 Icon(
-                    painter = if (isPlaying) painterResource(R.drawable.pause) else painterResource(
-                        R.drawable.play
-                    ),
+                    painter = painterResource(if (isPlaying) R.drawable.pause else R.drawable.play),
                     contentDescription = if (isPlaying) "Pausar" else "Tocar",
                     modifier = Modifier.size(64.dp)
                 )
             }
 
-            IconButton(onClick = {}) { //playerViewModel::nextTrack) {
+            IconButton(onClick = { playerViewModel.skipToNext("") }) {
                 Icon(
                     painter = painterResource(R.drawable.next),
                     contentDescription = "Próxima faixa",
@@ -79,10 +103,17 @@ internal fun MediaPlayerUI(
             IconButton(onClick = { navController.navigate("equalizer") }) {
                 Icon(
                     painter = painterResource(R.drawable.equalizer),
-                    contentDescription = "Próxima faixa",
+                    contentDescription = "Equalizador",
                     modifier = Modifier.size(48.dp)
                 )
             }
         }
     }
+}
+
+private fun formatTime(millis: Long): String {
+    val totalSeconds = millis / 1000
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return "%d:%02d".format(minutes, seconds)
 }
