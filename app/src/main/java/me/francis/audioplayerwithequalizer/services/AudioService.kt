@@ -2,6 +2,7 @@ package me.francis.audioplayerwithequalizer.services
 
 import android.app.Service
 import android.content.Intent
+import android.os.Binder
 import android.os.IBinder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,6 +12,7 @@ import me.francis.playbackmodule.PlaybackModuleImpl
 
 class AudioService : Service(), PlaybackModule {
 
+    private val binder = AudioBinder()
     private var playbackModule: PlaybackModule? = null
 
     override fun onCreate() {
@@ -43,7 +45,11 @@ class AudioService : Service(), PlaybackModule {
         // todo: destruir notificação aqui
     }
 
-    override fun onBind(p0: Intent?): IBinder? = null
+    inner class AudioBinder : Binder() {
+        fun getService(): AudioService = this@AudioService
+    }
+
+    override fun onBind(p0: Intent?): IBinder? = binder
 
     override fun play() = try {
         playbackModule!!.play()
