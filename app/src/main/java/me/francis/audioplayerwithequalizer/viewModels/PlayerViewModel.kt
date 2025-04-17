@@ -14,12 +14,9 @@ class PlayerViewModel : ViewModel() {
     val isPlaying = audioService?.isPlaying?.value
     val playbackEvents = audioService?.playbackEvents
 
-    init {
-        audioService?.onCreate()
-    }
-
     fun setAudioService(service: AudioService) {
         audioService = service
+        audioService?.onCreate()
     }
 
     fun startAudioService(intent: Intent, flags: Int, startId: Int) {
@@ -31,7 +28,7 @@ class PlayerViewModel : ViewModel() {
     }
 
     fun playPause() {
-        if (audioService?.isPlaying!!.value) {
+        if (audioService?.isPlaying?.value == true) {
             audioService?.pause()
         } else {
             audioService?.play()
