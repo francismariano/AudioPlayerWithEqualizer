@@ -2,37 +2,28 @@ package me.francis.audioplayerwithequalizer.viewModels
 
 import android.content.Intent
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import me.francis.audioplayerwithequalizer.services.AudioService
-import me.francis.playbackmodule.PlaybackEvent
 
 class PlayerViewModel : ViewModel() {
 
-    private val audioService = AudioService()
+    private var audioService: AudioService? = null
 
-    // todo: reaproveitar para estados da aplicação (play/pause, etc)
-    private val _currentPosition = MutableStateFlow<Int>(0)
-    val currentPosition = _currentPosition.asStateFlow()
-
-    private val _duration = MutableStateFlow<Int>(0)
-    val duration = _duration.asStateFlow()
-
-    private val _isPlaying = MutableStateFlow<Boolean>(false)
-    val isPlaying = _isPlaying.asStateFlow()
-
-    private val _currentTrack = MutableStateFlow<String?>(null)
-    val currentTrack = _currentTrack.asStateFlow()
-
-    private val _playbackEvents = MutableStateFlow<PlaybackEvent>(PlaybackEvent.PlaybackStopped)
-    val playbackEvents = _playbackEvents.asStateFlow()
+    val currentPosition = audioService?.currentPosition?.value
+    val currentTrack = audioService?.currentTrack?.value
+    val duration = audioService?.duration?.value
+    val isPlaying = audioService?.isPlaying?.value
+    val playbackEvents = audioService?.playbackEvents
 
     init {
-        audioService.onCreate()
+        audioService?.onCreate()
+    }
+
+    fun setAudioService(service: AudioService) {
+        audioService = service
     }
 
     fun startAudioService(intent: Intent, flags: Int, startId: Int) {
-        audioService.onStartCommand(
+        audioService?.onStartCommand(
             intent = intent,
             flags = flags,
             startId = startId
@@ -40,34 +31,34 @@ class PlayerViewModel : ViewModel() {
     }
 
     fun playPause() {
-        if (audioService.isPlaying.value) {
-            audioService.pause()
+        if (audioService?.isPlaying!!.value) {
+            audioService?.pause()
         } else {
-            audioService.play()
+            audioService?.play()
         }
     }
 
     fun stop() {
-        audioService.stop()
+        audioService?.stop()
     }
 
     fun seekTo(positionMs: Int) {
-        audioService.seekTo(positionMs = positionMs)
+        audioService?.seekTo(positionMs = positionMs)
     }
 
     fun setVolume(volume: Float) {
-        audioService.setVolume(volume = volume)
+        audioService?.setVolume(volume = volume)
     }
 
     fun skipToNext(path: String) {
-        audioService.skipToNext(path = path)
+        audioService?.skipToNext(path = path)
     }
 
     fun skipToPrevious(path: String) {
-        audioService.skipToPrevious(path = path)
+        audioService?.skipToPrevious(path = path)
     }
 
     fun setDataSource(path: String) {
-        audioService.setDataSource(path = path)
+        audioService?.setDataSource(path = path)
     }
 }

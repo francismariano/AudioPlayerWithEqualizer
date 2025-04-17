@@ -48,7 +48,9 @@ internal fun MediaPlayerUI(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = {}) { //playerViewModel::previousTrack) {
+            IconButton(
+                onClick = { playerViewModel.skipToPrevious("") }
+            ) {
                 Icon(
                     painter = painterResource(R.drawable.previous),
                     contentDescription = "Faixa anterior",

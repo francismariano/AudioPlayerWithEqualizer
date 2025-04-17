@@ -28,6 +28,7 @@ class MainActivity : ComponentActivity() {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as AudioService.AudioBinder
             audioService = binder.getService()
+            playerViewModel.setAudioService(audioService!!)
             serviceConnected = true
         }
 
@@ -47,8 +48,6 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // view model
-
                     // navigation
                     NavManager(playerViewModel = playerViewModel)
                 }
