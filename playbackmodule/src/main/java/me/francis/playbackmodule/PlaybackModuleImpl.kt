@@ -84,6 +84,7 @@ class PlaybackModuleImpl : PlaybackModule {
         positionUpdateJob = null
     }
 
+    // Fixme: a implmentação do play e do setDataSource não deveriam estar juntas?
     override fun play() {
         if (!_isPlaying.value) {
             mediaPlayer.start()
@@ -102,6 +103,7 @@ class PlaybackModuleImpl : PlaybackModule {
         }
     }
 
+    // Fixme: colocar stopForeground? ou stopSelf pra finalizar o serviço?
     override fun stop() {
         mediaPlayer.stop()
         _isPlaying.value = false

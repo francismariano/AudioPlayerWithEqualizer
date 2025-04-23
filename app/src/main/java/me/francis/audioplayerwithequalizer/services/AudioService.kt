@@ -2,18 +2,20 @@ package me.francis.audioplayerwithequalizer.services
 
 import android.app.Service
 import android.content.Intent
-import android.os.Binder
 import android.os.IBinder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import me.francis.audioplayerwithequalizer.AudioEqualizer
 import me.francis.playbackmodule.PlaybackEvent
 import me.francis.playbackmodule.PlaybackModule
 import me.francis.playbackmodule.PlaybackModuleImpl
 
 class AudioService : Service(), PlaybackModule {
 
-    private val binder = AudioBinder()
     private var playbackModule: PlaybackModule? = null
+
+    // todo: terminar implementção
+    private val audioEqualizer = AudioEqualizer()
 
     override fun onCreate() {
         super.onCreate()
@@ -22,7 +24,6 @@ class AudioService : Service(), PlaybackModule {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
         if (intent != null) {
             val action = intent.action
 
@@ -45,11 +46,7 @@ class AudioService : Service(), PlaybackModule {
         // todo: destruir notificação aqui
     }
 
-    inner class AudioBinder : Binder() {
-        fun getService(): AudioService = this@AudioService
-    }
-
-    override fun onBind(p0: Intent?): IBinder? = binder
+    override fun onBind(p0: Intent?): IBinder? = null
 
     override fun play() = try {
         playbackModule!!.play()

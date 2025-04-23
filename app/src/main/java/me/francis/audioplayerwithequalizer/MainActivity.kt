@@ -26,8 +26,8 @@ class MainActivity : ComponentActivity() {
 
     private var connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            val binder = service as AudioService.AudioBinder
-            audioService = binder.getService()
+//            val binder = service as AudioService.AudioBinder
+//            audioService = binder.getService()
             playerViewModel.setAudioService(audioService!!)
             serviceConnected = true
         }
