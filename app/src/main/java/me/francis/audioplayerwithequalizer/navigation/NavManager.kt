@@ -11,6 +11,7 @@ import me.francis.audioplayerwithequalizer.views.MediaPlayerUI
 
 @Composable
 internal fun NavManager(
+    equalizerViewModel: EqualizerViewModel,
     playerViewModel: PlayerViewModel
 ) {
     val navController = rememberNavController()
@@ -21,8 +22,6 @@ internal fun NavManager(
     ) {
         composable(route = "playerView") {
             MediaPlayerUI(
-                songTitle = "Song Title",
-                isPlaying = false,
                 navController = navController,
                 playerViewModel = playerViewModel
             )
@@ -32,7 +31,7 @@ internal fun NavManager(
         composable(route = "equalizer") {
             EqualizerView(
                 navController = navController,
-                equalizerViewModel = EqualizerViewModel(),
+                equalizerViewModel = equalizerViewModel,
             )
         }
     }

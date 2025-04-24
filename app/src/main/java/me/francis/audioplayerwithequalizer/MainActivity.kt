@@ -1,6 +1,5 @@
 package me.francis.audioplayerwithequalizer
 
-import android.app.Application
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,17 +10,31 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import me.francis.audioplayerwithequalizer.navigation.NavManager
-import me.francis.audioplayerwithequalizer.services.AudioService
+import me.francis.audioplayerwithequalizer.services.AudioServiceRepository
+import me.francis.audioplayerwithequalizer.services.AudioServiceRepositoryImpl
 import me.francis.audioplayerwithequalizer.ui.theme.AudioPlayerWithEqualizerTheme
+import me.francis.audioplayerwithequalizer.viewModels.EqualizerViewModel
+import me.francis.audioplayerwithequalizer.viewModels.EqualizerViewModelFactory
 import me.francis.audioplayerwithequalizer.viewModels.PlayerViewModel
+import me.francis.audioplayerwithequalizer.viewModels.PlayerViewModelFactory
 
 class MainActivity : ComponentActivity() {
 
+    private val audioServiceRepositoryImpl = AudioServiceRepositoryImpl()
+    private val audioServiceRepository by lazy {
+        AudioServiceRepository(
+            application,
+            audioServiceRepositoryImpl
+        )
+    }
+
     private val playerViewModel: PlayerViewModel by viewModels {
-        PlayerViewModelFactory(application)
+        PlayerViewModelFactory(audioServiceRepository)
+    }
+
+    private val equalizerViewModel: EqualizerViewModel by viewModels {
+        EqualizerViewModelFactory(audioServiceRepository)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,7 +46,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    NavManager(playerViewModel = playerViewModel)
+                    NavManager(
+                        equalizerViewModel = equalizerViewModel,
+                        playerViewModel = playerViewModel
+                    )
                 }
             }
         }
@@ -42,24 +58,14 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         println("onStart")
-        val intent = Intent(this, AudioService::class.java)
+        val intent = Intent(this, AudioServiceRepositoryImpl::class.java)
         this.startService(intent)
     }
 
     override fun onStop() {
         super.onStop()
         println("onStop")
-        val intent = Intent(this, AudioService::class.java)
+        val intent = Intent(this, AudioServiceRepositoryImpl::class.java)
         this.stopService(intent)
-    }
-}
-
-class PlayerViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(PlayerViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return PlayerViewModel(application) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

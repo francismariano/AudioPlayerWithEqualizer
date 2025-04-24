@@ -1,14 +1,12 @@
 package me.francis.audioplayerwithequalizer.viewModels
 
 import androidx.lifecycle.ViewModel
+import me.francis.audioplayerwithequalizer.models.Equalizer
+import me.francis.audioplayerwithequalizer.services.AudioServiceRepository
 
-class EqualizerViewModel(
-) : ViewModel() {
+class EqualizerViewModel(private val audioServiceRepository: AudioServiceRepository) : ViewModel() {
 
-    fun updateEqualizer(
-        column: Int,
-        frequency: Float
-    ) {
-        println("*** update Equalizer")
-    }
+    fun equalize(equalizer: Equalizer) = audioServiceRepository.equalize(equalizer)
+
+    fun setVolume(volume: Float) = audioServiceRepository.setVolume(volume)
 }

@@ -24,7 +24,7 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".services.AudioService"
+            android:name=".services.AudioServiceRepositoryImpl"
             android:exported="true">
         </service>
     </application>

@@ -1,55 +1,17 @@
 package me.francis.audioplayerwithequalizer.viewModels
 
-import android.app.Application
-import android.content.Intent
 import androidx.lifecycle.ViewModel
-import me.francis.audioplayerwithequalizer.services.AudioService
+import me.francis.audioplayerwithequalizer.services.AudioServiceRepository
 
-class PlayerViewModel(private val application: Application) : ViewModel() {
+class PlayerViewModel(private val audioServiceRepository: AudioServiceRepository) : ViewModel() {
 
-    fun play() {
-        val intent = Intent(application, AudioService::class.java).apply {
-            action = "ACTION_PLAY"
-        }
-        application.startService(intent)
-    }
+    fun play() = audioServiceRepository.play()
 
-    fun pause() {
-        val intent = Intent(application, AudioService::class.java).apply {
-            action = "ACTION_PAUSE"
-        }
-        application.startService(intent)
-    }
+    fun pause() = audioServiceRepository.pause()
 
-    fun seekTo(positionMs: Int) {
-        val intent = Intent(application, AudioService::class.java).apply {
-            action = "ACTION_SEEK_TO"
-            putExtra("positionMs", positionMs)
-        }
-        application.startService(intent)
-    }
+    fun seekTo(positionMs: Int) = audioServiceRepository.seekTo(positionMs)
 
-    fun setVolume(volume: Float) {
-        val intent = Intent(application, AudioService::class.java).apply {
-            action = "ACTION_SET_VOLUME"
-            putExtra("volume", volume)
-        }
-        application.startService(intent)
-    }
+    fun skipToNext(path: String) = audioServiceRepository.skipToNext(path)
 
-    fun skipToNext(path: String) {
-        val intent = Intent(application, AudioService::class.java).apply {
-            action = "ACTION_SKIP_TO_NEXT"
-            putExtra("path", path)
-        }
-        application.startService(intent)
-    }
-
-    fun skipToPrevious(path: String) {
-        val intent = Intent(application, AudioService::class.java).apply {
-            action = "ACTION_SKIP_TO_PREVIOUS"
-            putExtra("path", path)
-        }
-        application.startService(intent)
-    }
+    fun skipToPrevious(path: String) = audioServiceRepository.skipToPrevious(path)
 }
