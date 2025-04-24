@@ -1,61 +1,55 @@
 package me.francis.audioplayerwithequalizer.viewModels
 
+import android.app.Application
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import me.francis.audioplayerwithequalizer.services.AudioService
 
-class PlayerViewModel : ViewModel() {
+class PlayerViewModel(private val application: Application) : ViewModel() {
 
-    private var audioService: AudioService? = null
-
-    val currentPosition = audioService?.currentPosition?.value
-    val currentTrack = audioService?.currentTrack?.value
-    val duration = audioService?.duration?.value
-    val isPlaying = audioService?.isPlaying?.value
-    val playbackEvents = audioService?.playbackEvents
-
-    fun setAudioService(service: AudioService) {
-        audioService = service
-        audioService?.onCreate()
-    }
-
-    fun startAudioService(intent: Intent, flags: Int, startId: Int) {
-        audioService?.onStartCommand(
-            intent = intent,
-            flags = flags,
-            startId = startId
-        )
-    }
-
-    fun playPause() {
-        if (audioService?.isPlaying?.value == true) {
-            audioService?.pause()
-        } else {
-            audioService?.play()
+    fun play() {
+        val intent = Intent(application, AudioService::class.java).apply {
+            action = "ACTION_PLAY"
         }
+        application.startService(intent)
     }
 
-    fun stop() {
-        audioService?.stop()
+    fun pause() {
+        val intent = Intent(application, AudioService::class.java).apply {
+            action = "ACTION_PAUSE"
+        }
+        application.startService(intent)
     }
 
     fun seekTo(positionMs: Int) {
-        audioService?.seekTo(positionMs = positionMs)
+        val intent = Intent(application, AudioService::class.java).apply {
+            action = "ACTION_SEEK_TO"
+            putExtra("positionMs", positionMs)
+        }
+        application.startService(intent)
     }
 
     fun setVolume(volume: Float) {
-        audioService?.setVolume(volume = volume)
+        val intent = Intent(application, AudioService::class.java).apply {
+            action = "ACTION_SET_VOLUME"
+            putExtra("volume", volume)
+        }
+        application.startService(intent)
     }
 
     fun skipToNext(path: String) {
-        audioService?.skipToNext(path = path)
+        val intent = Intent(application, AudioService::class.java).apply {
+            action = "ACTION_SKIP_TO_NEXT"
+            putExtra("path", path)
+        }
+        application.startService(intent)
     }
 
     fun skipToPrevious(path: String) {
-        audioService?.skipToPrevious(path = path)
-    }
-
-    fun setDataSource(path: String) {
-        audioService?.setDataSource(path = path)
+        val intent = Intent(application, AudioService::class.java).apply {
+            action = "ACTION_SKIP_TO_PREVIOUS"
+            putExtra("path", path)
+        }
+        application.startService(intent)
     }
 }

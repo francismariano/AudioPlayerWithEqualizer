@@ -12,26 +12,39 @@ import me.francis.playbackmodule.PlaybackModuleImpl
 
 class AudioService : Service(), PlaybackModule {
 
-    private var playbackModule: PlaybackModule? = null
+    private var playbackModule: PlaybackModule = PlaybackModuleImpl()
 
-    // todo: terminar implementção
+    // todo: terminar de implementar
     private val audioEqualizer = AudioEqualizer()
-
-    override fun onCreate() {
-        super.onCreate()
-        playbackModule = PlaybackModuleImpl() // fazer assim ou criar diretamente?
-        // todo: criar notificação aqui
-    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
-            val action = intent.action
 
-            if (action != null) {
-                when (action) {
-                    "ACTION_PLAY" -> play()
-                    "ACTION_PAUSE" -> pause()
-                    "ACTION_STOP" -> stop()
+            println("aaaaaaa intent = $intent")
+
+            when (intent.action) {
+                "ACTION_PLAY" -> play()
+                "ACTION_PAUSE" -> pause()
+                "ACTION_STOP" -> stopSelf()
+                "ACTION_SEEK_TO" -> {
+                    val position = intent.getIntExtra("positionMs", -1)
+                    if (position != -1) {
+                        seekTo(position)
+                    }
+                }
+                "ACTION_SET_VOLUME" -> {
+                    val volume = intent.getFloatExtra("volume", -1f)
+                    if (volume != -1f) {
+                        setVolume(volume)
+                    }
+                }
+                "ACTION_SKIP_TO_NEXT" -> {
+                    val path = intent.getStringExtra("path")
+                    path?.let { skipToNext(it) }
+                }
+                "ACTION_SKIP_TO_PREVIOUS" -> {
+                    val path = intent.getStringExtra("path")
+                    path?.let { skipToPrevious(it) }
                 }
             }
         }
@@ -42,69 +55,68 @@ class AudioService : Service(), PlaybackModule {
     override fun onDestroy() {
         super.onDestroy()
         release()
-        playbackModule = null
         // todo: destruir notificação aqui
     }
 
     override fun onBind(p0: Intent?): IBinder? = null
 
     override fun play() = try {
-        playbackModule!!.play()
+        playbackModule.play()
     } catch (e: Exception) {
         e.printStackTrace()
     }
 
     override fun pause() = try {
-        playbackModule!!.pause()
+        playbackModule.pause()
     } catch (e: Exception) {
         e.printStackTrace()
     }
 
     override fun stop() = try {
-        playbackModule!!.stop()
+        playbackModule.stop()
     } catch (e: Exception) {
         e.printStackTrace()
     }
 
     override fun seekTo(positionMs: Int) = try {
-        playbackModule!!.seekTo(positionMs)
+        playbackModule.seekTo(positionMs)
     } catch (e: Exception) {
         e.printStackTrace()
     }
 
     override fun setVolume(volume: Float) = try {
-        playbackModule!!.setVolume(volume)
+        playbackModule.setVolume(volume)
     } catch (e: Exception) {
         e.printStackTrace()
     }
 
     override fun skipToNext(path: String) = try {
-        playbackModule!!.skipToNext(path)
+        playbackModule.skipToNext(path)
     } catch (e: Exception) {
         e.printStackTrace()
     }
 
     override fun skipToPrevious(path: String) = try {
-        playbackModule!!.skipToPrevious(path)
+        playbackModule.skipToPrevious(path)
     } catch (e: Exception) {
         e.printStackTrace()
     }
 
     override fun setDataSource(path: String) = try {
-        playbackModule!!.setDataSource(path)
+        playbackModule.setDataSource(path)
     } catch (e: Exception) {
         e.printStackTrace()
     }
 
     override fun release() = try {
-        playbackModule!!.release()
+        playbackModule.release()
     } catch (e: Exception) {
         e.printStackTrace()
     }
 
-    override val currentPosition: StateFlow<Int> get() = playbackModule!!.currentPosition
-    override val duration: StateFlow<Int> get() = playbackModule!!.duration
-    override val isPlaying: StateFlow<Boolean> get() = playbackModule!!.isPlaying
-    override val currentTrack: StateFlow<String?> get() = playbackModule!!.currentTrack
-    override val playbackEvents: Flow<PlaybackEvent> get() = playbackModule!!.playbackEvents
+    override val currentPosition: StateFlow<Int> get() = playbackModule.currentPosition
+    override val duration: StateFlow<Int> get() = playbackModule.duration
+    override val isPlaying: StateFlow<Boolean> get() = playbackModule.isPlaying
+    override val currentTrack: StateFlow<String?> get() = playbackModule.currentTrack
+    override val playbackEvents: Flow<PlaybackEvent> get() = playbackModule.playbackEvents
 }

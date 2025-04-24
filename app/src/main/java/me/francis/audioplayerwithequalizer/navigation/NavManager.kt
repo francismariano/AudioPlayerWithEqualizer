@@ -21,8 +21,8 @@ internal fun NavManager(
     ) {
         composable(route = "playerView") {
             MediaPlayerUI(
-                songTitle = playerViewModel.currentTrack.toString(),
-                isPlaying = playerViewModel.isPlaying == true,
+                songTitle = "Song Title",
+                isPlaying = false,
                 navController = navController,
                 playerViewModel = playerViewModel
             )
