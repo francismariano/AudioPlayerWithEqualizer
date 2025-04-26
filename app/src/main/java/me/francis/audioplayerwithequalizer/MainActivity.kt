@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import me.francis.audioplayerwithequalizer.navigation.NavManager
 import me.francis.audioplayerwithequalizer.services.AudioService
-import me.francis.audioplayerwithequalizer.services.Musica
 import me.francis.audioplayerwithequalizer.ui.theme.AudioPlayerWithEqualizerTheme
 import me.francis.audioplayerwithequalizer.viewModels.PlayerViewModel
 
@@ -152,6 +151,12 @@ class MainActivity : ComponentActivity() {
             println("**-- Index: ${it.index}, Nome: ${it.nome}, Path: ${it.path}")
         }
     }
+
+    data class Musica(
+        val index: Int,
+        val nome: String,
+        val path: String
+    )
 
     override fun onStart() {
         super.onStart()
