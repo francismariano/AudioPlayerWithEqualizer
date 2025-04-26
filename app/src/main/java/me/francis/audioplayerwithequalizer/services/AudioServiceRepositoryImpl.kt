@@ -13,15 +13,13 @@ import me.francis.playbackmodule.PlaybackModuleImpl
 class AudioServiceRepositoryImpl : Service(), PlaybackModule {
 
     private var playbackModule: PlaybackModule = PlaybackModuleImpl()
-
-    // todo: terminar de implementar
     private val audioEqualizer = AudioEqualizer()
 
     // ciclo de vida //
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
 
-            println("aaaaaaa intent = $intent")
+            println("intent = $intent")
 
             when (intent.action) {
                 "ACTION_PLAY" -> play()
@@ -67,7 +65,6 @@ class AudioServiceRepositoryImpl : Service(), PlaybackModule {
     override fun onDestroy() {
         super.onDestroy()
         release()
-        // todo: destruir notificação aqui
     }
 
     override fun onBind(p0: Intent?): IBinder? = null

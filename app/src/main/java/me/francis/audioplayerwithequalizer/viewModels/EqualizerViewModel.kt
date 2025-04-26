@@ -8,5 +8,6 @@ class EqualizerViewModel(private val audioServiceRepository: AudioServiceReposit
 
     fun equalize(equalizer: Equalizer) = audioServiceRepository.equalize(equalizer)
 
+    // Todo: implementar UI
     fun setVolume(volume: Float) = audioServiceRepository.setVolume(volume)
 }

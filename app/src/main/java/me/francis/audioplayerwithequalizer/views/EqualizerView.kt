@@ -47,6 +47,9 @@ internal fun EqualizerView(
     navController: NavController,
     equalizerViewModel: EqualizerViewModel,
 ) {
+
+    val equalizer by remember { mutableStateOf(value = Equalizer()) }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -77,9 +80,10 @@ internal fun EqualizerView(
         content = { padding ->
             GraphicEqualizer(
                 padding = padding,
-                equalizer = Equalizer(),
+                equalizer = equalizer,
                 updateFrequency = { column, frequency ->
-                    // todo: aplicar equalização
+                    equalizer.gains[column] = frequency
+                    equalizerViewModel.equalize(equalizer = equalizer)
                 }
             )
         }
@@ -90,7 +94,7 @@ internal fun EqualizerView(
 internal fun GraphicEqualizer(
     padding: PaddingValues,
     equalizer: Equalizer,
-    updateFrequency: (column: Int, frequency: Float) -> Unit,
+    updateFrequency: (column: Int, frequency: Int) -> Unit,
 ) {
     LazyRow(
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -126,7 +130,7 @@ internal fun SliderCustom(
     frequency: Short,
     index: Int,
     modifier: Modifier = Modifier,
-    updateFrequency: (column: Int, frequency: Float) -> Unit,
+    updateFrequency: (column: Int, frequency: Int) -> Unit,
 ) {
     var sliderValue by remember(frequency) { mutableStateOf(frequency) }
     var gainFrequencies = listOf(32f, 125f, 250f, 1000f, 4000f, 16000f)
@@ -167,13 +171,7 @@ internal fun SliderCustom(
                     sliderValue = it.toInt().toShort()
                 },
                 valueRange = -12f..12f,
-                onValueChangeFinished = {
-                    // todo: implementar
-//                    updateFrequency(
-//                        index,
-//                        sliderValue,
-//                    )
-                },
+                onValueChangeFinished = { updateFrequency(index, sliderValue.toInt()) },
                 colors = SliderDefaults.colors(
                     thumbColor = MaterialTheme.colorScheme.primary,
                     disabledThumbColor = MaterialTheme.colorScheme.onBackground,

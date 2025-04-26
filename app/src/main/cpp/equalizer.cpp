@@ -2,8 +2,7 @@
 #include <string>
 
 extern "C"
-JNIEXPORT jint JNICALL
-Java_me_francis_audioplayerwithequalizer_AudioEqualizer_applyEqualization(
+JNIEXPORT jint JNICALL Java_me_francis_audioplayerwithequalizer_AudioEqualizer_applyEqualization(
         JNIEnv *env,
         jobject thisObj,
         jshortArray audioData,

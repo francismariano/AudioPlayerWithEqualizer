@@ -74,14 +74,13 @@ class AudioServiceRepository(
     override val currentTrack: StateFlow<String?> = audioServiceRepositoryImpl.currentTrack
     override val playbackEvents: Flow<PlaybackEvent> = audioServiceRepositoryImpl.playbackEvents
 
-    // Fixme: talvez esse set dataSource nao deveria estar aqui
     override fun setDataSource(path: String) {
 //        val intent = Intent(application, AudioService::class.java).apply {
 //            action = "ACTION_SET_DATA_SOURCE"
 //            putExtra("path", path)
 //        }
 //        application.startService(intent)
-        TODO("Not yet implemented")
+        TODO("Not yet implemented - esperando parte das musicas")
     }
 
     fun equalize(equalizer: Equalizer) {
