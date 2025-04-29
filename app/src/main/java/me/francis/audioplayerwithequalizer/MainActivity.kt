@@ -5,12 +5,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import me.francis.audioplayerwithequalizer.navigation.NavManager
+import me.francis.audioplayerwithequalizer.permissions.PermissionManager
+import me.francis.audioplayerwithequalizer.services.AudioFileManager
 import me.francis.audioplayerwithequalizer.services.AudioServiceRepository
 import me.francis.audioplayerwithequalizer.services.AudioServiceRepositoryImpl
 import me.francis.audioplayerwithequalizer.ui.theme.AudioPlayerWithEqualizerTheme
@@ -46,7 +49,7 @@ class MainActivity : ComponentActivity() {
         if (isGranted) {
             openDirectorySelector()
         } else {
-            println("Permissão negada para READ_MEDIA_AUDIO")
+            println("*** Permissão negada para READ_MEDIA_AUDIO ***")
         }
     }
 
@@ -85,7 +88,6 @@ class MainActivity : ComponentActivity() {
         )
 
         audioFileManager = AudioFileManager(contentResolver)
-
         permissionManager.checkAudioPermission()
     }
 

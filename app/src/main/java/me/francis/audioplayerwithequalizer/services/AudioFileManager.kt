@@ -44,6 +44,11 @@ class AudioFileManager(private val contentResolver: ContentResolver) {
                 }
             }
         }
+
+        musicList.forEach {
+            println("*** Music = ${Music(it.index, it.nome, it.path)} ***")
+        }
+
         return musicList
     }
 }
