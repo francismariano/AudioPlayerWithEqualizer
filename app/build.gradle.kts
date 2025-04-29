@@ -16,6 +16,34 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        externalNativeBuild {
+
+            cmake {
+                /**
+                 * adiciona flags de compilação para C. Está vazio, mas normalmente você poderia
+                 * colocar algo como "-std=c++17" para definir a versão da linguagem C++, "-DDEBUG"
+                 * para definições de pré-processador, entre outros.
+                 */
+                cFlags.add("")
+            }
+
+            ndk {
+                /**
+                 * /// opcional ///
+                 * filtra quais ABIs (Application Binary Interfaces) serão compiladas.
+                 * Apenas dispositivos com essas arquiteturas vão receber os binários nativos.
+                 */
+                abiFilters.addAll(listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a"))
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            // caminho para o seu arquivo CMakeLists.txt
+            path = file("src/main/cpp/CMakeLists.txt")
+        }
     }
 
     buildTypes {

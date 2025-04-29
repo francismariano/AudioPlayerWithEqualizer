@@ -26,8 +26,6 @@ import me.francis.audioplayerwithequalizer.viewModels.PlayerViewModel
 
 @Composable
 internal fun MediaPlayerUI(
-    songTitle: String?,
-    isPlaying: Boolean,
     navController: NavController,
     playerViewModel: PlayerViewModel,
 ) {
@@ -84,10 +82,18 @@ internal fun MediaPlayerUI(
                 )
             }
 
-            IconButton(onClick = playerViewModel::playPause) {
+            IconButton(onClick = playerViewModel::play) {
                 Icon(
-                    painter = painterResource(if (isPlaying) R.drawable.pause else R.drawable.play),
-                    contentDescription = if (isPlaying) "Pausar" else "Tocar",
+                    painter = painterResource(R.drawable.play),
+                    contentDescription = "Tocar",
+                    modifier = Modifier.size(64.dp)
+                )
+            }
+
+            IconButton(onClick = playerViewModel::pause) {
+                Icon(
+                    painter = painterResource(R.drawable.pause),
+                    contentDescription = "Pausar",
                     modifier = Modifier.size(64.dp)
                 )
             }

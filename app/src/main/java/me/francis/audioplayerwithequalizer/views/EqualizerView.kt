@@ -24,7 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -47,6 +47,9 @@ internal fun EqualizerView(
     navController: NavController,
     equalizerViewModel: EqualizerViewModel,
 ) {
+
+    val equalizer by remember { mutableStateOf(value = Equalizer()) }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -77,9 +80,10 @@ internal fun EqualizerView(
         content = { padding ->
             GraphicEqualizer(
                 padding = padding,
-                equalizer = Equalizer(),
+                equalizer = equalizer,
                 updateFrequency = { column, frequency ->
-                    equalizerViewModel.updateEqualizer(column, frequency)
+                    equalizer.gains[column] = frequency
+                    equalizerViewModel.equalize(equalizer = equalizer)
                 }
             )
         }
@@ -90,7 +94,7 @@ internal fun EqualizerView(
 internal fun GraphicEqualizer(
     padding: PaddingValues,
     equalizer: Equalizer,
-    updateFrequency: (column: Int, frequency: Float) -> Unit,
+    updateFrequency: (column: Int, frequency: Int) -> Unit,
 ) {
     LazyRow(
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -123,12 +127,12 @@ internal fun GraphicEqualizer(
 
 @Composable
 internal fun SliderCustom(
-    frequency: Float,
+    frequency: Short,
     index: Int,
     modifier: Modifier = Modifier,
-    updateFrequency: (column: Int, frequency: Float) -> Unit,
+    updateFrequency: (column: Int, frequency: Int) -> Unit,
 ) {
-    var sliderValue by remember(frequency) { mutableFloatStateOf(frequency) }
+    var sliderValue by remember(frequency) { mutableStateOf(frequency) }
     var gainFrequencies = listOf(32f, 125f, 250f, 1000f, 4000f, 16000f)
 
     Column(
@@ -162,17 +166,12 @@ internal fun SliderCustom(
                 .background(Color.Transparent),
         ) {
             Slider(
-                value = sliderValue,
+                value = sliderValue.toFloat(),
                 onValueChange = {
-                    sliderValue = it
+                    sliderValue = it.toInt().toShort()
                 },
                 valueRange = -12f..12f,
-                onValueChangeFinished = {
-                    updateFrequency(
-                        index,
-                        sliderValue,
-                    )
-                },
+                onValueChangeFinished = { updateFrequency(index, sliderValue.toInt()) },
                 colors = SliderDefaults.colors(
                     thumbColor = MaterialTheme.colorScheme.primary,
                     disabledThumbColor = MaterialTheme.colorScheme.onBackground,

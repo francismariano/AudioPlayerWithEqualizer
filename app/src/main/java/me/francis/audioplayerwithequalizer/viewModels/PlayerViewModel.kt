@@ -1,61 +1,17 @@
 package me.francis.audioplayerwithequalizer.viewModels
 
-import android.content.Intent
 import androidx.lifecycle.ViewModel
-import me.francis.audioplayerwithequalizer.services.AudioService
+import me.francis.audioplayerwithequalizer.services.AudioServiceRepository
 
-class PlayerViewModel : ViewModel() {
+class PlayerViewModel(private val audioServiceRepository: AudioServiceRepository) : ViewModel() {
 
-    private var audioService: AudioService? = null
+    fun play() = audioServiceRepository.play()
 
-    val currentPosition = audioService?.currentPosition?.value
-    val currentTrack = audioService?.currentTrack?.value
-    val duration = audioService?.duration?.value
-    val isPlaying = audioService?.isPlaying?.value
-    val playbackEvents = audioService?.playbackEvents
+    fun pause() = audioServiceRepository.pause()
 
-    fun setAudioService(service: AudioService) {
-        audioService = service
-        audioService?.onCreate()
-    }
+    fun seekTo(positionMs: Int) = audioServiceRepository.seekTo(positionMs)
 
-    fun startAudioService(intent: Intent, flags: Int, startId: Int) {
-        audioService?.onStartCommand(
-            intent = intent,
-            flags = flags,
-            startId = startId
-        )
-    }
+    fun skipToNext(path: String) = audioServiceRepository.skipToNext(path)
 
-    fun playPause() {
-        if (audioService?.isPlaying?.value == true) {
-            audioService?.pause()
-        } else {
-            audioService?.play()
-        }
-    }
-
-    fun stop() {
-        audioService?.stop()
-    }
-
-    fun seekTo(positionMs: Int) {
-        audioService?.seekTo(positionMs = positionMs)
-    }
-
-    fun setVolume(volume: Float) {
-        audioService?.setVolume(volume = volume)
-    }
-
-    fun skipToNext(path: String) {
-        audioService?.skipToNext(path = path)
-    }
-
-    fun skipToPrevious(path: String) {
-        audioService?.skipToPrevious(path = path)
-    }
-
-    fun setDataSource(path: String) {
-        audioService?.setDataSource(path = path)
-    }
+    fun skipToPrevious(path: String) = audioServiceRepository.skipToPrevious(path)
 }
