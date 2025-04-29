@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -22,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import me.francis.audioplayerwithequalizer.R
+import me.francis.audioplayerwithequalizer.services.musicList
 import me.francis.audioplayerwithequalizer.viewModels.PlayerViewModel
 
 @Composable
@@ -112,6 +114,16 @@ internal fun MediaPlayerUI(
                     contentDescription = "Equalizador",
                     modifier = Modifier.size(48.dp)
                 )
+            }
+        }
+
+        Column {
+            LazyColumn {
+                musicList.forEach {
+                    item {
+                        Text(text = "Item: ${it.index}, ${it.nome}")
+                    }
+                }
             }
         }
     }

@@ -3,19 +3,14 @@ package me.francis.audioplayerwithequalizer.services
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.DocumentsContract
+import me.francis.audioplayerwithequalizer.services.AudioFileManager.Music
 
 var default_path = "content://com.android.externalstorage.documents/tree/primary%3AMusic"
+val musicList = mutableListOf<Music>()
 
 class AudioFileManager(private val contentResolver: ContentResolver) {
-
-    data class Music(
-        val index: Int,
-        val nome: String,
-        val path: String
-    )
-
     fun processAudioFiles(uri: Uri): List<Music> {
-        val musicList = mutableListOf<Music>()
+
         var index = 0
 
         val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(
@@ -47,10 +42,18 @@ class AudioFileManager(private val contentResolver: ContentResolver) {
             }
         }
 
-        musicList.forEach {
-            println("*** Music = ${Music(it.index, it.nome, it.path)} ***")
+        if (musicList.isNotEmpty()) {
+            musicList.forEach {
+                println("*** Music = ${Music(it.index, it.nome, it.path)} ***")
+            }
         }
 
         return musicList
     }
+
+    data class Music(
+        val index: Int,
+        val nome: String,
+        val path: String
+    )
 }

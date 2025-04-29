@@ -83,13 +83,13 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        //audioFileManager = AudioFileManager(contentResolver)
+
         permissionManager = PermissionManager(
             context = this,
             permissionLauncher = permissionLauncher,
             onPermissionGranted = { AudioFileManager(contentResolver).processAudioFiles(default_path.toUri()) }
         )
-
-        //audioFileManager = AudioFileManager(contentResolver)
 
         permissionManager.checkAudioPermission()
     }
