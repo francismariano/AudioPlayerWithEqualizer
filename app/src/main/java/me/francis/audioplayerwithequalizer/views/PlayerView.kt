@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import me.francis.audioplayerwithequalizer.R
+import me.francis.audioplayerwithequalizer.services.AudioFileManager
 import me.francis.audioplayerwithequalizer.services.musicList
 import me.francis.audioplayerwithequalizer.viewModels.PlayerViewModel
 
@@ -30,6 +31,7 @@ import me.francis.audioplayerwithequalizer.viewModels.PlayerViewModel
 internal fun MediaPlayerUI(
     navController: NavController,
     playerViewModel: PlayerViewModel,
+    audioFileManager: AudioFileManager,
 ) {
     Column(
         modifier = Modifier
@@ -118,6 +120,14 @@ internal fun MediaPlayerUI(
         }
 
         Column {
+            IconButton(onClick = { audioFileManager.getDirectory() }) {
+                Icon(
+                    painter = painterResource(R.drawable.equalizer),
+                    contentDescription = "Trocar pasta de músicas",
+                    modifier = Modifier.size(48.dp)
+                )
+            }
+
             LazyColumn {
                 musicList.forEach {
                     item {

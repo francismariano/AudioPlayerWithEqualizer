@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import me.francis.audioplayerwithequalizer.services.AudioFileManager
 import me.francis.audioplayerwithequalizer.viewModels.EqualizerViewModel
 import me.francis.audioplayerwithequalizer.viewModels.PlayerViewModel
 import me.francis.audioplayerwithequalizer.views.EqualizerView
@@ -23,7 +24,8 @@ internal fun NavManager(
         composable(route = "playerView") {
             MediaPlayerUI(
                 navController = navController,
-                playerViewModel = playerViewModel
+                playerViewModel = playerViewModel,
+                audioFileManager = AudioFileManager(),
             )
         }
 

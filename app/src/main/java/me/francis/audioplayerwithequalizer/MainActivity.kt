@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            openDirectorySelector()
+            println("*** Permissão garantida para READ_MEDIA_AUDIO ***")
         } else {
             println("*** Permissão negada para READ_MEDIA_AUDIO ***")
         }
@@ -62,7 +62,9 @@ class MainActivity : ComponentActivity() {
             contentResolver.takePersistableUriPermission(
                 it, Intent.FLAG_GRANT_READ_URI_PERMISSION
             )
-            audioFileManager.processAudioFiles(it)
+            audioFileManager.processAudioFiles(it, contentResolver)
+            default_path = it.toString()
+            println("*** new default_path = $default_path")
         }
     }
 
@@ -83,19 +85,16 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        //audioFileManager = AudioFileManager(contentResolver)
+        audioFileManager = AudioFileManager()
 
         permissionManager = PermissionManager(
             context = this,
             permissionLauncher = permissionLauncher,
-            onPermissionGranted = { AudioFileManager(contentResolver).processAudioFiles(default_path.toUri()) }
+            onPermissionGranted = { audioFileManager.processAudioFiles(default_path.toUri(), contentResolver) }
         )
 
         permissionManager.checkAudioPermission()
-    }
-
-    private fun openDirectorySelector() {
-        directoryPickerLauncher.launch(null)
+        audioFileManager.setComponet(directoryPickerLauncher)
     }
 
     override fun onStart() {

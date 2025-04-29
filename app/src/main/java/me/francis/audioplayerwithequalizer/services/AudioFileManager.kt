@@ -3,14 +3,24 @@ package me.francis.audioplayerwithequalizer.services
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.DocumentsContract
+import androidx.activity.result.ActivityResultLauncher
+import androidx.core.net.toUri
 import me.francis.audioplayerwithequalizer.services.AudioFileManager.Music
 
+private var directoryPickerLauncher: ActivityResultLauncher<Uri?>? = null
 var default_path = "content://com.android.externalstorage.documents/tree/primary%3AMusic"
 val musicList = mutableListOf<Music>()
 
-class AudioFileManager(private val contentResolver: ContentResolver) {
-    fun processAudioFiles(uri: Uri): List<Music> {
+class AudioFileManager() {
+    fun setComponet(directory: ActivityResultLauncher<Uri?>) {
+        directoryPickerLauncher = directory
+    }
 
+    fun getDirectory() {
+        directoryPickerLauncher?.launch(default_path.toUri())
+    }
+
+    fun processAudioFiles(uri: Uri, contentResolver: ContentResolver): List<Music> {
         var index = 0
 
         val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(
