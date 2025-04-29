@@ -4,6 +4,8 @@ import android.content.ContentResolver
 import android.net.Uri
 import android.provider.DocumentsContract
 
+var default_path = "content://com.android.externalstorage.documents/tree/primary%3AMusic"
+
 class AudioFileManager(private val contentResolver: ContentResolver) {
 
     data class Music(
