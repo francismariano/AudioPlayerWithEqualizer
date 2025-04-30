@@ -1,159 +1,104 @@
 package me.francis.playbackmodule
 
-import android.media.AudioAttributes
+import android.content.Context
 import android.media.MediaPlayer
+import android.net.Uri
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
 
-class PlaybackModuleImpl : PlaybackModule {
-    private val mediaPlayer: MediaPlayer = MediaPlayer().apply {
-        setAudioAttributes(
-            AudioAttributes.Builder()
-                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                .setUsage(AudioAttributes.USAGE_MEDIA)
-                .build()
-        )
-    }
+class PlaybackModuleImpl(private val context: Context) : PlaybackModule {
+    private val mediaPlayer: MediaPlayer = MediaPlayer()
+    private val _playbackState = MutableStateFlow(PlaybackState())
+    val playbackState: StateFlow<PlaybackState> = _playbackState.asStateFlow()
 
-    private val scope = CoroutineScope(Dispatchers.Main)
-    private var positionUpdateJob: Job? = null
-
-    // Estados
-    private val _currentPosition = MutableStateFlow(0)
-    private val _duration = MutableStateFlow(0)
-    private val _isPlaying = MutableStateFlow(false)
-    private val _currentTrack = MutableStateFlow<String?>(null)
-    private val _playbackEvents = MutableSharedFlow<PlaybackEvent>(extraBufferCapacity = 10)
-
-    override val currentPosition: StateFlow<Int> = _currentPosition.asStateFlow()
-    override val duration: StateFlow<Int> = _duration.asStateFlow()
-    override val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
-    override val currentTrack: StateFlow<String?> = _currentTrack.asStateFlow()
-    override val playbackEvents: Flow<PlaybackEvent> = _playbackEvents.asSharedFlow()
+    val scope = CoroutineScope(Dispatchers.Default)
 
     init {
-        setupMediaPlayerListeners()
-    }
-
-    private fun setupMediaPlayerListeners() {
         mediaPlayer.setOnPreparedListener {
-            _duration.value = mediaPlayer.duration
-            startPositionUpdates()
-            _playbackEvents.tryEmit(PlaybackEvent.PlaybackPrepared)
+            _playbackState.value = _playbackState.value.copy(
+                duration = it.duration,
+                isReady = true
+            )
+            it.start()
+            updateProgress()
         }
 
         mediaPlayer.setOnCompletionListener {
-            _isPlaying.value = false
-            stopPositionUpdates()
-            _playbackEvents.tryEmit(PlaybackEvent.PlaybackCompleted)
-        }
-
-        mediaPlayer.setOnErrorListener { _, what, extra ->
-            val errorMsg = when (what) {
-                MediaPlayer.MEDIA_ERROR_UNKNOWN -> "Erro desconhecido"
-                MediaPlayer.MEDIA_ERROR_SERVER_DIED -> "Serviço de mídia indisponível"
-                else -> "Erro code $what, extra $extra"
-            }
-            _playbackEvents.tryEmit(PlaybackEvent.Error(errorMsg))
-            false
+            _playbackState.value = _playbackState.value.copy(
+                isPlaying = false,
+                currentPosition = 0
+            )
         }
     }
 
-    private fun startPositionUpdates() {
-        stopPositionUpdates()
-        positionUpdateJob = scope.launch {
-            while (isPlaying.value) {
-                _currentPosition.value = mediaPlayer.currentPosition
-                delay(1000) // Atualiza a cada segundo
+    private fun updateProgress() {
+        scope.launch {
+            while (mediaPlayer.isPlaying) {
+                _playbackState.value = _playbackState.value.copy(
+                    currentPosition = mediaPlayer.currentPosition
+                )
+                delay(500)
             }
         }
     }
 
-    private fun stopPositionUpdates() {
-        positionUpdateJob?.cancel()
-        positionUpdateJob = null
-    }
-
-    // Fixme: a implmentação do play e do setDataSource não deveriam estar juntas?
     override fun play() {
-        if (!_isPlaying.value) {
+        if (!mediaPlayer.isPlaying) {
             mediaPlayer.start()
-            _isPlaying.value = true
-            startPositionUpdates()
-            _playbackEvents.tryEmit(PlaybackEvent.PlaybackStarted)
+            _playbackState.value = _playbackState.value.copy(isPlaying = true)
+            updateProgress()
         }
     }
 
     override fun pause() {
-        if (_isPlaying.value) {
+        if (mediaPlayer.isPlaying) {
             mediaPlayer.pause()
-            _isPlaying.value = false
-            stopPositionUpdates()
-            _playbackEvents.tryEmit(PlaybackEvent.PlaybackPaused)
+            _playbackState.value = _playbackState.value.copy(isPlaying = false)
         }
     }
 
-    // Fixme: colocar stopForeground? ou stopSelf pra finalizar o serviço?
     override fun stop() {
         mediaPlayer.stop()
-        _isPlaying.value = false
-        _currentPosition.value = 0
-        stopPositionUpdates()
-        _playbackEvents.tryEmit(PlaybackEvent.PlaybackStopped)
+        mediaPlayer.reset()
+        _playbackState.value = PlaybackState()
     }
 
-    override fun seekTo(positionMs: Int) {
-        if (positionMs in 0..duration.value) {
-            mediaPlayer.seekTo(positionMs)
-            _currentPosition.value = positionMs
-        }
+    override fun seekTo(position: Int) {
+        mediaPlayer.seekTo(position)
+        _playbackState.value = _playbackState.value.copy(currentPosition = position)
     }
 
-    override fun skipToNext(path: String) {
-        setDataSource(path)
-        play()
+    override fun skipToNext() {
+        // Implementação depende da lista de músicas
     }
 
-    override fun skipToPrevious(path: String) {
-        setDataSource(path)
-        play()
+    override fun skipToPrevious() {
+        // Implementação depende da lista de músicas
     }
 
-    override fun setVolume(volume: Float) {
-        mediaPlayer.setVolume(volume, volume)
-    }
-
-    override fun setDataSource(path: String) {
+    override fun setDataSource(uri: Uri) {
         try {
-            _isPlaying.value = false
             mediaPlayer.reset()
-            mediaPlayer.setDataSource(path)
-            mediaPlayer.prepareAsync() // Preparação assíncrona
-
-            val trackName = path.substringAfterLast('/')
-            _currentTrack.value = trackName
-            _playbackEvents.tryEmit(PlaybackEvent.TrackChanged(trackName))
+            mediaPlayer.setDataSource(context, uri)
+            mediaPlayer.prepareAsync()
+            _playbackState.value = _playbackState.value.copy(
+                isReady = false,
+                currentPosition = 0
+            )
         } catch (e: IOException) {
-            _playbackEvents.tryEmit(PlaybackEvent.Error("Falha ao carregar arquivo: ${e.message}"))
-        } catch (e: IllegalStateException) {
             e.printStackTrace()
-            _playbackEvents.tryEmit(PlaybackEvent.Error("Player em estado inválido"))
         }
     }
 
-    override fun release() {
-        stop()
+    fun release() {
         mediaPlayer.release()
-        positionUpdateJob?.cancel()
+        scope.cancel()
     }
 }
