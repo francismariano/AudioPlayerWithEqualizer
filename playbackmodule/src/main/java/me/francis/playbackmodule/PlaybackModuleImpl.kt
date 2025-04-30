@@ -17,6 +17,8 @@ class PlaybackModuleImpl(private val context: Context) : PlaybackModule {
     private val mediaPlayer: MediaPlayer = MediaPlayer()
     private val _playbackState = MutableStateFlow(PlaybackState())
     val playbackState: StateFlow<PlaybackState> = _playbackState.asStateFlow()
+    private var currentPlaylist: List<Uri> = emptyList()
+    private var currentTrackIndex: Int = -1
 
     val scope = CoroutineScope(Dispatchers.Default)
 
@@ -75,12 +77,32 @@ class PlaybackModuleImpl(private val context: Context) : PlaybackModule {
         _playbackState.value = _playbackState.value.copy(currentPosition = position)
     }
 
+    fun setPlaylist(playlist: List<Uri>) {
+        currentPlaylist = playlist
+        currentTrackIndex = if (playlist.isNotEmpty()) 0 else -1
+        if (currentTrackIndex != -1) {
+            setDataSource(playlist[currentTrackIndex])
+        }
+    }
+
     override fun skipToNext() {
-        // Implementação depende da lista de músicas
+        if (currentPlaylist.isEmpty()) return
+
+        currentTrackIndex = (currentTrackIndex + 1) % currentPlaylist.size
+        setDataSource(currentPlaylist[currentTrackIndex])
+        play()
     }
 
     override fun skipToPrevious() {
-        // Implementação depende da lista de músicas
+        if (currentPlaylist.isEmpty()) return
+
+        currentTrackIndex = if (currentTrackIndex - 1 < 0) {
+            currentPlaylist.size - 1
+        } else {
+            currentTrackIndex - 1
+        }
+        setDataSource(currentPlaylist[currentTrackIndex])
+        play()
     }
 
     override fun setDataSource(uri: Uri) {
@@ -94,6 +116,14 @@ class PlaybackModuleImpl(private val context: Context) : PlaybackModule {
             )
         } catch (e: IOException) {
             e.printStackTrace()
+        }
+    }
+
+    fun getCurrentTrack(): Uri? {
+        return if (currentTrackIndex in currentPlaylist.indices) {
+            currentPlaylist[currentTrackIndex]
+        } else {
+            null
         }
     }
 
