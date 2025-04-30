@@ -1,6 +1,7 @@
 package me.francis.audioplayerwithequalizer
 
 import android.content.Intent
+import android.media.MediaPlayer
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,7 +18,6 @@ import me.francis.audioplayerwithequalizer.permissions.PermissionManager
 import me.francis.audioplayerwithequalizer.services.AudioFileManager
 import me.francis.audioplayerwithequalizer.services.AudioServiceRepository
 import me.francis.audioplayerwithequalizer.services.AudioServiceRepositoryImpl
-import me.francis.audioplayerwithequalizer.services.default_path
 import me.francis.audioplayerwithequalizer.ui.theme.AudioPlayerWithEqualizerTheme
 import me.francis.audioplayerwithequalizer.viewModels.EqualizerViewModel
 import me.francis.audioplayerwithequalizer.viewModels.EqualizerViewModelFactory
@@ -25,7 +25,6 @@ import me.francis.audioplayerwithequalizer.viewModels.PlayerViewModel
 import me.francis.audioplayerwithequalizer.viewModels.PlayerViewModelFactory
 
 class MainActivity : ComponentActivity() {
-
     private val audioServiceRepositoryImpl = AudioServiceRepositoryImpl()
     private val audioServiceRepository by lazy {
         AudioServiceRepository(
@@ -44,16 +43,7 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var permissionManager: PermissionManager
     private lateinit var audioFileManager: AudioFileManager
-
-    private val permissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            println("*** Permissão garantida para READ_MEDIA_AUDIO ***")
-        } else {
-            println("*** Permissão negada para READ_MEDIA_AUDIO ***")
-        }
-    }
+    private var mediaPlayer = MediaPlayer()
 
     private val directoryPickerLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
@@ -63,8 +53,7 @@ class MainActivity : ComponentActivity() {
                 it, Intent.FLAG_GRANT_READ_URI_PERMISSION
             )
             audioFileManager.processAudioFiles(it, contentResolver)
-            default_path = it.toString()
-            println("*** new default_path = $default_path")
+            AudioFileManager.defaultMusicUri = it
         }
     }
 
@@ -89,12 +78,16 @@ class MainActivity : ComponentActivity() {
 
         permissionManager = PermissionManager(
             context = this,
-            permissionLauncher = permissionLauncher,
-            onPermissionGranted = { audioFileManager.processAudioFiles(default_path.toUri(), contentResolver) }
+            permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()){},
+            onPermissionGranted = { audioFileManager.processAudioFiles(AudioFileManager.defaultMusicUri, contentResolver) }
         )
 
         permissionManager.checkAudioPermission()
-        audioFileManager.setComponet(directoryPickerLauncher)
+
+        mediaPlayer.setDataSource(this, AudioFileManager.musicList[0].path.toUri())
+        mediaPlayer.prepare()
+        mediaPlayer.start()
+        //audioFileManager.setComponet(directoryPickerLauncher)
     }
 
     override fun onStart() {

@@ -1,5 +1,7 @@
 package me.francis.audioplayerwithequalizer.views
 
+import android.content.Intent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import me.francis.audioplayerwithequalizer.R
 import me.francis.audioplayerwithequalizer.services.AudioFileManager
-import me.francis.audioplayerwithequalizer.services.musicList
 import me.francis.audioplayerwithequalizer.viewModels.PlayerViewModel
 
 @Composable
@@ -120,16 +121,28 @@ internal fun MediaPlayerUI(
         }
 
         Column {
-            IconButton(onClick = { audioFileManager.getDirectory() }) {
+            /*IconButton(onClick = {
+                registerForActivityResult(
+                    ActivityResultContracts.OpenDocumentTree()
+                ) { uri ->
+                    uri?.let {
+                        contentResolver.takePersistableUriPermission(
+                            it, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
+                        audioFileManager.processAudioFiles(it, contentResolver)
+                        AudioFileManager.defaultMusicUri = it
+                    }
+                }
+            }) {
                 Icon(
                     painter = painterResource(R.drawable.equalizer),
                     contentDescription = "Trocar pasta de músicas",
                     modifier = Modifier.size(48.dp)
                 )
-            }
+            }*/
 
             LazyColumn {
-                musicList.forEach {
+                AudioFileManager.musicList.forEach {
                     item {
                         Text(text = "Item: ${it.index}, ${it.nome}")
                     }
