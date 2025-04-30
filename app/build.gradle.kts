@@ -87,4 +87,6 @@ dependencies {
     implementation(libs.navigation)
     // modules
     implementation(project(":playbackmodule"))
+    // test with mockK
+    testImplementation(libs.mockk)
 }
