@@ -1,5 +1,6 @@
 package me.francis.audioplayerwithequalizer
 
+import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,22 +12,21 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import me.francis.audioplayerwithequalizer.ui.theme.AudioPlayerWithEqualizerTheme
+import me.francis.audioplayerwithequalizer.viewModels.MusicPlayerController
 import me.francis.audioplayerwithequalizer.viewModels.MusicPlayerViewModel
 import me.francis.audioplayerwithequalizer.views.PlayerScreen
 
 class MainActivity : ComponentActivity() {
+    private lateinit var playerController: MusicPlayerController
     private lateinit var viewModel: MusicPlayerViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-        viewModel = ViewModelProvider(this,
-            object : ViewModelProvider.Factory {
-                override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return MusicPlayerViewModel(application) as T
-                }
-            }
+        playerController = MusicPlayerController(applicationContext)
+        viewModel = ViewModelProvider(
+            this,
+            MusicPlayerViewModelFactory(application, playerController)
         )[MusicPlayerViewModel::class.java]
 
         setContent {
@@ -39,5 +39,21 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+}
+
+class MusicPlayerViewModelFactory(
+    private val application: Application,
+    private val playerController: MusicPlayerController,
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(MusicPlayerViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return MusicPlayerViewModel(
+                application,
+                playerController
+            ) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
