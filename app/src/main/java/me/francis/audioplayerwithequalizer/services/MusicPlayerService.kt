@@ -1,0 +1,157 @@
+package me.francis.audioplayerwithequalizer.services
+
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Binder
+import android.os.Bundle
+import android.os.IBinder
+import androidx.core.app.NotificationCompat
+import me.francis.playbackmodule.PlaybackModuleImpl
+
+class MusicPlayerService : Service() {
+    private val binder = LocalBinder()
+    val playbackModule = PlaybackModuleImpl(this)
+    private var isServiceStarted = false
+
+    // Criação do canal de notificação
+    private fun createNotificationChannel() {
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "Player de Música",
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = "Notificação do player de música"
+        }
+
+        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        manager.createNotificationChannel(channel)
+    }
+
+    // Binder para comunicação com a Activity
+    inner class LocalBinder : Binder() {
+        fun getService(): MusicPlayerService = this@MusicPlayerService
+    }
+
+    override fun onBind(intent: Intent?): IBinder = binder
+
+    override fun onCreate() {
+        super.onCreate()
+        createNotificationChannel()
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (!isServiceStarted) {
+            startForeground(NOTIFICATION_ID, buildNotification())
+            isServiceStarted = true
+        }
+
+        // Processar ações recebidas
+        intent?.action?.let { handleAction(it, intent) }
+
+        return START_STICKY
+    }
+
+    private fun handleAction(action: String, intent: Intent) {
+        when (action) {
+            ACTION_PLAY -> playbackModule.play()
+            ACTION_PAUSE -> playbackModule.pause()
+            ACTION_STOP -> {
+                playbackModule.stop()
+                stopSelf()
+            }
+            ACTION_SKIP_NEXT -> playbackModule.skipToNext()
+            ACTION_SKIP_PREV -> playbackModule.skipToPrevious()
+            ACTION_SEEK_TO -> intent.getIntExtra(EXTRA_POSITION, 0).let {
+                playbackModule.seekTo(it)
+            }
+            ACTION_SET_PLAYLIST -> {
+                val uris = intent.getParcelableArrayListExtra<Uri>(EXTRA_PLAYLIST)
+                uris?.let { playbackModule.setPlaylist(it) }
+            }
+        }
+    }
+
+    private fun buildNotification(): Notification {
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Reproduzindo música")
+            .setContentText(playbackModule.playbackState.value.currentTrack?.toString() ?: "")
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .addAction(
+                NotificationCompat.Action(
+                    android.R.drawable.ic_media_previous,
+                    "Anterior",
+                    getPendingIntent(ACTION_SKIP_PREV)
+                )
+            )
+            .addAction(
+                NotificationCompat.Action(
+                    if (playbackModule.playbackState.value.isPlaying)
+                        android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
+                    if (playbackModule.playbackState.value.isPlaying)
+                        "Pausar" else "Play",
+                    getPendingIntent(
+                        if (playbackModule.playbackState.value.isPlaying)
+                            ACTION_PAUSE else ACTION_PLAY
+                    )
+                )
+            )
+            .addAction(
+                NotificationCompat.Action(
+                    android.R.drawable.ic_media_next,
+                    "Próxima",
+                    getPendingIntent(ACTION_SKIP_NEXT)
+                )
+            )
+            .build()
+    }
+
+    private fun getPendingIntent(action: String): PendingIntent {
+        val intent = Intent(this, MusicPlayerService::class.java).apply {
+            this.action = action
+        }
+        return PendingIntent.getService(
+            this,
+            action.hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        playbackModule.release()
+    }
+
+    companion object {
+        const val CHANNEL_ID = "music_player_channel"
+        const val NOTIFICATION_ID = 101
+
+        // Ações
+        const val ACTION_PLAY = "com.example.mediaplayer.PLAY"
+        const val ACTION_PAUSE = "com.example.mediaplayer.PAUSE"
+        const val ACTION_STOP = "com.example.mediaplayer.STOP"
+        const val ACTION_SKIP_NEXT = "com.example.mediaplayer.SKIP_NEXT"
+        const val ACTION_SKIP_PREV = "com.example.mediaplayer.SKIP_PREV"
+        const val ACTION_SEEK_TO = "com.example.mediaplayer.SEEK_TO"
+        const val ACTION_SET_PLAYLIST = "com.example.mediaplayer.SET_PLAYLIST"
+
+        // Extras
+        const val EXTRA_POSITION = "extra_position"
+        const val EXTRA_PLAYLIST = "extra_playlist"
+
+        fun startService(context: Context, action: String, extras: Bundle? = null) {
+            val intent = Intent(context, MusicPlayerService::class.java).apply {
+                this.action = action
+                extras?.let { putExtras(it) }
+            }
+            context.startService(intent)
+        }
+    }
+}

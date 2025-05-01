@@ -127,6 +127,18 @@ class PlaybackModuleImpl(private val context: Context) : PlaybackModule {
         }
     }
 
+    fun getCurrentState(): PlaybackState {
+        return PlaybackState(
+            isPlaying = mediaPlayer.isPlaying,
+            isReady = mediaPlayer.isPlaying || (mediaPlayer.currentPosition > 0),
+            currentPosition = mediaPlayer.currentPosition,
+            duration = mediaPlayer.duration,
+            currentTrackIndex = currentTrackIndex,
+            playlistSize = currentPlaylist.size,
+            currentTrack = getCurrentTrack()
+        )
+    }
+
     fun release() {
         mediaPlayer.release()
         scope.cancel()
