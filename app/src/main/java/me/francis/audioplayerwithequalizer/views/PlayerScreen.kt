@@ -2,7 +2,6 @@ package me.francis.audioplayerwithequalizer.views
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -38,10 +37,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import me.francis.audioplayerwithequalizer.models.Music
 import me.francis.audioplayerwithequalizer.utils.loadMusicFiles
 import me.francis.audioplayerwithequalizer.viewModels.MusicPlayerViewModel
-import androidx.core.net.toUri
 
 @Composable
 fun PlayerScreen(
@@ -51,6 +50,13 @@ fun PlayerScreen(
     val playbackState by viewModel.playbackState.collectAsState()
     val context = LocalContext.current
     var showPlaylistDialog by remember { mutableStateOf(false) }
+
+    var musicList by remember { mutableStateOf<List<Music>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        musicList = loadMusicFiles(context)
+        viewModel.setPlaylist(musicList.map { it.path.toUri() })
+    }
 
     Column(
         modifier = modifier
@@ -135,7 +141,7 @@ fun PlayerScreen(
     if (showPlaylistDialog) {
         PlaylistDialog(
             onDismiss = { showPlaylistDialog = false },
-            viewModel = viewModel
+            musicList = musicList,
         )
     }
 }
@@ -143,14 +149,8 @@ fun PlayerScreen(
 @Composable
 private fun PlaylistDialog(
     onDismiss: () -> Unit,
-    viewModel: MusicPlayerViewModel
+    musicList: List<Music> = emptyList(),
 ) {
-    val context = LocalContext.current
-    var musicList by remember { mutableStateOf<List<Music>>(emptyList()) }
-
-    LaunchedEffect(Unit) {
-        musicList = loadMusicFiles(context)
-    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -161,7 +161,7 @@ private fun PlaylistDialog(
                     ListItem(
                         headlineContent = { Text(music.name) },
                         modifier = Modifier.clickable {
-                            viewModel.setPlaylist(listOf(music.path.toUri()))
+                            //viewModel.setPlaylist(listOf(music.path.toUri()))
                             onDismiss()
                         }
                     )
