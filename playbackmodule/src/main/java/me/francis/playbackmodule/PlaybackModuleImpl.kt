@@ -3,20 +3,20 @@ package me.francis.playbackmodule
 import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
 
 class PlaybackModuleImpl(private val context: Context) : PlaybackModule {
     private val mediaPlayer: MediaPlayer = MediaPlayer()
     private val _playbackState = MutableStateFlow(PlaybackState())
-    val playbackState: StateFlow<PlaybackState> = _playbackState.asStateFlow()
+    val playbackState: StateFlow<PlaybackState> = _playbackState
     private var currentPlaylist: List<Uri> = emptyList()
     private var currentTrackIndex: Int = -1
 
@@ -26,21 +26,21 @@ class PlaybackModuleImpl(private val context: Context) : PlaybackModule {
         mediaPlayer.setOnPreparedListener {
             _playbackState.value = _playbackState.value.copy(
                 duration = it.duration,
-                isReady = true
+                isReady = true,
+                isPlaying = true
             )
             it.start()
             updateProgress()
         }
 
         mediaPlayer.setOnCompletionListener {
-            _playbackState.value = _playbackState.value.copy(
-                isPlaying = false,
-                currentPosition = 0
-            )
+            skipToNext()
         }
+
     }
 
     private fun updateProgress() {
+        Log.d("MediaPlayer*", "Updating progress")
         scope.launch {
             while (mediaPlayer.isPlaying) {
                 _playbackState.value = _playbackState.value.copy(
@@ -52,6 +52,7 @@ class PlaybackModuleImpl(private val context: Context) : PlaybackModule {
     }
 
     override fun play() {
+        Log.d("MediaPlayer*", "play() called")
         if (!mediaPlayer.isPlaying) {
             mediaPlayer.start()
             _playbackState.value = _playbackState.value.copy(isPlaying = true)
@@ -60,6 +61,7 @@ class PlaybackModuleImpl(private val context: Context) : PlaybackModule {
     }
 
     override fun pause() {
+        Log.d("MediaPlayer*", "pause() called")
         if (mediaPlayer.isPlaying) {
             mediaPlayer.pause()
             _playbackState.value = _playbackState.value.copy(isPlaying = false)
@@ -67,17 +69,20 @@ class PlaybackModuleImpl(private val context: Context) : PlaybackModule {
     }
 
     override fun stop() {
+        Log.d("MediaPlayer*", "stop() called")
         mediaPlayer.stop()
         mediaPlayer.reset()
         _playbackState.value = PlaybackState()
     }
 
     override fun seekTo(position: Int) {
+        Log.d("MediaPlayer*", "seekTo() called with position: $position")
         mediaPlayer.seekTo(position)
         _playbackState.value = _playbackState.value.copy(currentPosition = position)
     }
 
     fun setPlaylist(playlist: List<Uri>) {
+        Log.d("MediaPlayer*", "setPlaylist() called with playlist: $playlist")
         currentPlaylist = playlist
         currentTrackIndex = if (playlist.isNotEmpty()) 0 else -1
         if (currentTrackIndex != -1) {
@@ -86,14 +91,16 @@ class PlaybackModuleImpl(private val context: Context) : PlaybackModule {
     }
 
     override fun skipToNext() {
+        Log.d("MediaPlayer*", "skipToNext() called")
         if (currentPlaylist.isEmpty()) return
 
         currentTrackIndex = (currentTrackIndex + 1) % currentPlaylist.size
         setDataSource(currentPlaylist[currentTrackIndex])
-        play()
+//        play()
     }
 
     override fun skipToPrevious() {
+        Log.d("MediaPlayer*", "skipToPrevious() called")
         if (currentPlaylist.isEmpty()) return
 
         currentTrackIndex = if (currentTrackIndex - 1 < 0) {
@@ -102,44 +109,29 @@ class PlaybackModuleImpl(private val context: Context) : PlaybackModule {
             currentTrackIndex - 1
         }
         setDataSource(currentPlaylist[currentTrackIndex])
-        play()
+//        play()
     }
 
     override fun setDataSource(uri: Uri) {
+        Log.d("MediaPlayer*", "setDataSource() called with uri: $uri")
         try {
             mediaPlayer.reset()
             mediaPlayer.setDataSource(context, uri)
             mediaPlayer.prepareAsync()
             _playbackState.value = _playbackState.value.copy(
                 isReady = false,
-                currentPosition = 0
+                currentPosition = 0,
+                playlistSize = currentPlaylist.size,
+                currentTrack = uri
             )
         } catch (e: IOException) {
+            Log.d("MediaPlayer*", "Error setting data source", e)
             e.printStackTrace()
         }
     }
 
-    fun getCurrentTrack(): Uri? {
-        return if (currentTrackIndex in currentPlaylist.indices) {
-            currentPlaylist[currentTrackIndex]
-        } else {
-            null
-        }
-    }
-
-    fun getCurrentState(): PlaybackState {
-        return PlaybackState(
-            isPlaying = mediaPlayer.isPlaying,
-            isReady = mediaPlayer.isPlaying || (mediaPlayer.currentPosition > 0),
-            currentPosition = mediaPlayer.currentPosition,
-            duration = mediaPlayer.duration,
-            currentTrackIndex = currentTrackIndex,
-            playlistSize = currentPlaylist.size,
-            currentTrack = getCurrentTrack()
-        )
-    }
-
     fun release() {
+        Log.d("MediaPlayer*", "release() called")
         mediaPlayer.release()
         scope.cancel()
     }
