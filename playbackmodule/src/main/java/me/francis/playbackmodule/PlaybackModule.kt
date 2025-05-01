@@ -1,8 +1,6 @@
 package me.francis.playbackmodule
 
 import android.net.Uri
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 
 interface PlaybackModule {
     fun play()
@@ -11,5 +9,6 @@ interface PlaybackModule {
     fun seekTo(position: Int)
     fun skipToNext()
     fun skipToPrevious()
+    fun skipTo(index: Int)
     fun setDataSource(uri: Uri)
 }

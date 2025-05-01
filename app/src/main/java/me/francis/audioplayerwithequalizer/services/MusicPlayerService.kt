@@ -65,11 +65,17 @@ class MusicPlayerService : Service() {
                 playbackModule.stop()
                 stopSelf()
             }
+
             ACTION_SKIP_NEXT -> playbackModule.skipToNext()
+            ACTION_SKIP_TO -> intent.getIntExtra(EXTRA_INDEX, 0).let {
+                playbackModule.skipTo(it)
+            }
+
             ACTION_SKIP_PREV -> playbackModule.skipToPrevious()
             ACTION_SEEK_TO -> intent.getIntExtra(EXTRA_POSITION, 0).let {
                 playbackModule.seekTo(it)
             }
+
             ACTION_SET_PLAYLIST -> {
                 val uris = intent.getParcelableArrayListExtra<Uri>(EXTRA_PLAYLIST)
                 uris?.let { playbackModule.setPlaylist(it) }
@@ -138,12 +144,14 @@ class MusicPlayerService : Service() {
         const val ACTION_PAUSE = "com.example.mediaplayer.PAUSE"
         const val ACTION_STOP = "com.example.mediaplayer.STOP"
         const val ACTION_SKIP_NEXT = "com.example.mediaplayer.SKIP_NEXT"
+        const val ACTION_SKIP_TO = "com.example.mediaplayer.SKIP_TO"
         const val ACTION_SKIP_PREV = "com.example.mediaplayer.SKIP_PREV"
         const val ACTION_SEEK_TO = "com.example.mediaplayer.SEEK_TO"
         const val ACTION_SET_PLAYLIST = "com.example.mediaplayer.SET_PLAYLIST"
 
         // Extras
         const val EXTRA_POSITION = "extra_position"
+        const val EXTRA_INDEX = "extra_index"
         const val EXTRA_PLAYLIST = "extra_playlist"
 
         fun startService(context: Context, action: String, extras: Bundle? = null) {

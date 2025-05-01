@@ -89,6 +89,16 @@ class MusicPlayerController(
         MusicPlayerService.startService(context, MusicPlayerService.ACTION_SKIP_NEXT)
     }
 
+    fun skipTo(index: Int) {
+        Log.d("MusicPlayerController", "skipTo called with index: $index")
+        MusicPlayerService.startService(
+            context, MusicPlayerService.ACTION_SKIP_TO,
+            Bundle().apply {
+                putInt(MusicPlayerService.EXTRA_INDEX, index)
+            }
+        )
+    }
+
     fun skipPrevious() {
         Log.d("MusicPlayerController", "skipPrevious called")
         MusicPlayerService.startService(context, MusicPlayerService.ACTION_SKIP_PREV)

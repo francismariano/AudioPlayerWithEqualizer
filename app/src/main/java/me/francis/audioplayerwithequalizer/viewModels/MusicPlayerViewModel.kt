@@ -18,6 +18,7 @@ class MusicPlayerViewModel(
     fun play() = playerController.play()
     fun pause() = playerController.pause()
     fun skipNext() = playerController.skipNext()
+    fun skipTo(position: Int) = playerController.skipTo(position)
     fun skipPrevious() = playerController.skipPrevious()
     fun seekTo(position: Int) = playerController.seekTo(position)
     fun setPlaylist(uris: List<Uri>) = playerController.setPlaylist(uris)

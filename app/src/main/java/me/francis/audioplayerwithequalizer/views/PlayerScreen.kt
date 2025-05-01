@@ -141,6 +141,7 @@ fun PlayerScreen(
     if (showPlaylistDialog) {
         PlaylistDialog(
             onDismiss = { showPlaylistDialog = false },
+            skipTo = viewModel::skipTo,
             musicList = musicList,
         )
     }
@@ -149,6 +150,7 @@ fun PlayerScreen(
 @Composable
 private fun PlaylistDialog(
     onDismiss: () -> Unit,
+    skipTo: (Int) -> Unit,
     musicList: List<Music> = emptyList(),
 ) {
 
@@ -161,7 +163,7 @@ private fun PlaylistDialog(
                     ListItem(
                         headlineContent = { Text(music.name) },
                         modifier = Modifier.clickable {
-                            //viewModel.setPlaylist(listOf(music.path.toUri()))
+                            skipTo(musicList.indexOf(music))
                             onDismiss()
                         }
                     )

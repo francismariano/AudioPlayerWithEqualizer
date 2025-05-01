@@ -90,6 +90,15 @@ class PlaybackModuleImpl(private val context: Context) : PlaybackModule {
         }
     }
 
+    override fun skipTo(index: Int) {
+        Log.d("MediaPlayer*", "skipTo() called with index: $index")
+        if (index in currentPlaylist.indices) {
+            currentTrackIndex = index
+            setDataSource(currentPlaylist[currentTrackIndex])
+//            play()
+        }
+    }
+
     override fun skipToNext() {
         Log.d("MediaPlayer*", "skipToNext() called")
         if (currentPlaylist.isEmpty()) return
