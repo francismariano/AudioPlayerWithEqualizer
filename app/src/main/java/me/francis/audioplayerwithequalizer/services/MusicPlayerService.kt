@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.Binder
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import me.francis.playbackmodule.PlaybackModuleImpl
 
@@ -21,6 +22,7 @@ class MusicPlayerService : Service() {
 
     // Criação do canal de notificação
     private fun createNotificationChannel() {
+        Log.d("MusicPlayerService", "createNotificationChannel() called")
         val channel = NotificationChannel(
             CHANNEL_ID,
             "Player de Música",
@@ -84,6 +86,7 @@ class MusicPlayerService : Service() {
     }
 
     private fun buildNotification(): Notification {
+        Log.d("MusicPlayerService", "buildNotification() called")
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Reproduzindo música")
             .setContentText(playbackModule.playbackState.value.currentTrack?.toString() ?: "")
