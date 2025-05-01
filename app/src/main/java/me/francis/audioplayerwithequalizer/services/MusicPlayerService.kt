@@ -11,14 +11,27 @@ import android.net.Uri
 import android.os.Binder
 import android.os.Bundle
 import android.os.IBinder
+import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import me.francis.audioplayerwithequalizer.MainActivity
 import me.francis.playbackmodule.PlaybackModuleImpl
 
 class MusicPlayerService : Service() {
     private val binder = LocalBinder()
     val playbackModule = PlaybackModuleImpl(this)
     private var isServiceStarted = false
+
+    private var mediaSession: MediaSessionCompat? = null
+
+    private fun initializeMediaSession() {
+        mediaSession = MediaSessionCompat(this, "MusicPlayerService").apply {
+            setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
+                    MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
+            setCallback(MediaSessionCallback())
+            setActive(true)
+        }
+    }
 
     // Criação do canal de notificação
     private fun createNotificationChannel() {
@@ -45,6 +58,7 @@ class MusicPlayerService : Service() {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
+        initializeMediaSession()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -88,10 +102,19 @@ class MusicPlayerService : Service() {
     private fun buildNotification(): Notification {
         Log.d("MusicPlayerService", "buildNotification() called")
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Reproduzindo música")
-            .setContentText(playbackModule.playbackState.value.currentTrack?.toString() ?: "")
+            .setContentTitle("Player de Música")
+            .setContentText("Tocando agora")
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+//            .setLargeIcon(getAlbumArtBitmap()) // Bitmap da capa do álbum
+            .setContentIntent(getContentIntent())
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
+                .setMediaSession(mediaSession?.sessionToken)
+                .setShowActionsInCompactView(0, 1, 2)
+            )
             .addAction(
                 NotificationCompat.Action(
                     android.R.drawable.ic_media_previous,
@@ -101,14 +124,9 @@ class MusicPlayerService : Service() {
             )
             .addAction(
                 NotificationCompat.Action(
-                    if (playbackModule.playbackState.value.isPlaying)
-                        android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
-                    if (playbackModule.playbackState.value.isPlaying)
-                        "Pausar" else "Play",
-                    getPendingIntent(
-                        if (playbackModule.playbackState.value.isPlaying)
-                            ACTION_PAUSE else ACTION_PLAY
-                    )
+                    if (true) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
+                    if (true) "Pausar" else "Tocar",
+                    getPendingIntent(if (true) ACTION_PAUSE else ACTION_PLAY)
                 )
             )
             .addAction(
@@ -119,6 +137,18 @@ class MusicPlayerService : Service() {
                 )
             )
             .build()
+    }
+
+    private fun getContentIntent(): PendingIntent {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        return PendingIntent.getActivity(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
     }
 
     private fun getPendingIntent(action: String): PendingIntent {
@@ -134,8 +164,19 @@ class MusicPlayerService : Service() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         playbackModule.release()
+        mediaSession?.release()
+        super.onDestroy()
+    }
+
+    inner class MediaSessionCallback : MediaSessionCompat.Callback() {
+        override fun onPlay() {
+            // Implementar ação de play
+        }
+
+        override fun onPause() {
+            // Implementar ação de pause
+        }
     }
 
     companion object {
