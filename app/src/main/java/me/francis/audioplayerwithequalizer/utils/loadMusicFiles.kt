@@ -1,13 +1,11 @@
 package me.francis.audioplayerwithequalizer.utils
 
-import android.content.Context
 import android.os.Environment
-import android.util.Log
 import me.francis.audioplayerwithequalizer.models.Music
 import java.io.File
 
-fun loadMusicFiles(context: Context): List<Music> {
-    val musicDir = File(context.getExternalFilesDir(null), "Musics")
+fun loadMusicFiles(): List<Music> {
+    val musicDir: File = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
     if (!musicDir.exists()) return emptyList()
 
     return musicDir.listFiles()?.filter { file ->

@@ -1,6 +1,5 @@
 package me.francis.audioplayerwithequalizer.views
 
-import android.content.Context
 import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,8 +17,8 @@ import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Divider
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -36,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -52,13 +50,12 @@ fun MusicPlayerView(
     musicPlayerViewModel: MusicPlayerViewModel
 ) {
     val playbackState by musicPlayerViewModel.playbackState.collectAsState()
-    val context = LocalContext.current
     var showPlaylistDialog by remember { mutableStateOf(false) }
 
     var musicList by remember { mutableStateOf<List<Music>>(emptyList()) }
 
     LaunchedEffect(Unit) {
-        musicList = loadMusicFiles(context)
+        musicList = loadMusicFiles()
         musicPlayerViewModel.setPlaylist(musicList.map { it.path.toUri() })
     }
 
@@ -68,7 +65,7 @@ fun MusicPlayerView(
     ) {
         Text(
             text = playbackState.currentTrack?.let { uri ->
-                getFileNameFromUri(context, uri)
+                getFileNameFromUri(uri)
             } ?: "Nenhuma música selecionada",
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 8.dp)
@@ -174,7 +171,7 @@ private fun PlaylistDialog(
                             onDismiss()
                         }
                     )
-                    Divider()
+                    HorizontalDivider()
                 }
             }
         },
@@ -193,6 +190,6 @@ private fun formatTime(milliseconds: Int): String {
     return String.format("%02d:%02d", minutes, seconds)
 }
 
-private fun getFileNameFromUri(context: Context, uri: Uri): String {
+private fun getFileNameFromUri(uri: Uri): String {
     return uri.lastPathSegment?.substringAfterLast('/') ?: "Arquivo desconhecido"
 }
