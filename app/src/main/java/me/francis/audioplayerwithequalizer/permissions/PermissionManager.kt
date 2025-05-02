@@ -1,63 +1,69 @@
 package me.francis.audioplayerwithequalizer.permissions
 
-import android.Manifest
-import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Build
-import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
-private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 1001
+sealed class PermissionState {
+    object Loading : PermissionState()
+    object Granted : PermissionState()
+    data class Denied(val denied: List<String>) : PermissionState()
+}
 
 @Composable
-fun NotificationPermissionHandler(
-    onPermissionGranted: () -> Unit,
-    onPermissionDenied: () -> Unit
+fun PermissionsHandler(
+    onAllPermissionsGranted: () -> Unit,
+    onPermissionsDenied: (deniedPermissions: List<String>) -> Unit
 ) {
     val context = LocalContext.current
-    val activity = context as? Activity
+
+    // Permissions to request depending on Android version
+    val permissions = remember {
+        mutableListOf<String>().apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                add(android.Manifest.permission.READ_MEDIA_AUDIO)
+                add(android.Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                add(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+        }
+    }
+
+    var permissionsRequested by remember { mutableStateOf(false) }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        val denied = result.filter { !it.value }.keys.toList()
+        if (denied.isEmpty()) {
+            onAllPermissionsGranted()
+        } else {
+            onPermissionsDenied(denied)
+        }
+    }
 
     LaunchedEffect(Unit) {
-        Log.d("NotificationPermissionHandler", "LaunchedEffect called")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Log.d("NotificationPermissionHandler", "Checking notification permission")
-            when (PackageManager.PERMISSION_GRANTED) {
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) -> {
-                    Log.d("NotificationPermissionHandler", "Permission already granted")
-                    onPermissionGranted()
-                }
-
-                else -> {
-                    Log.d("NotificationPermissionHandler", "Requesting notification permission")
-                    activity?.let {
-                        val shouldShowRationale =
-                            ActivityCompat.shouldShowRequestPermissionRationale(
-                                it,
-                                Manifest.permission.POST_NOTIFICATIONS
-                            )
-
-                        if (shouldShowRationale) {
-                            onPermissionDenied()
-                        } else {
-                            ActivityCompat.requestPermissions(
-                                it,
-                                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                                NOTIFICATION_PERMISSION_REQUEST_CODE
-                            )
-                        }
-                    }
-                }
+        if (!permissionsRequested) {
+            val deniedPermissions = permissions.filter {
+                ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
             }
-        } else {
-            Log.d("NotificationPermissionHandler", "Permission already granted")
-            onPermissionGranted()
+
+            if (deniedPermissions.isEmpty()) {
+                onAllPermissionsGranted()
+            } else {
+                launcher.launch(deniedPermissions.toTypedArray())
+            }
+
+            permissionsRequested = true
         }
     }
 }
