@@ -1,4 +1,4 @@
-package me.francis.equalizationmodule
+package me.francis.equalizermodule
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
