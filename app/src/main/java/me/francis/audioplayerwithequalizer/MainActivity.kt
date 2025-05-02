@@ -11,23 +11,21 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import me.francis.audioplayerwithequalizer.navigation.NavManager
 import me.francis.audioplayerwithequalizer.ui.theme.AudioPlayerWithEqualizerTheme
 import me.francis.audioplayerwithequalizer.viewModels.MusicPlayerController
 import me.francis.audioplayerwithequalizer.viewModels.MusicPlayerViewModel
-import me.francis.audioplayerwithequalizer.views.PlayerScreen
 
 class MainActivity : ComponentActivity() {
     private lateinit var playerController: MusicPlayerController
-    private lateinit var viewModel: MusicPlayerViewModel
+    private lateinit var musicPlayerViewModel: MusicPlayerViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         playerController = MusicPlayerController(applicationContext)
-        viewModel = ViewModelProvider(
-            this,
-            MusicPlayerViewModelFactory(application, playerController)
-        )[MusicPlayerViewModel::class.java]
+
+        musicPlayerViewModel = ViewModelProvider(this, MusicPlayerViewModelFactory(application, playerController))[MusicPlayerViewModel::class.java]
 
         setContent {
             AudioPlayerWithEqualizerTheme {
@@ -35,6 +33,9 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    NavManager(
+                        musicPlayerViewModel = musicPlayerViewModel
+                    )
 
 //                    NotificationPermissionHandler(
 //                        onPermissionGranted = { Log.d("MainActivity", "Permission granted") },
@@ -44,8 +45,6 @@ class MainActivity : ComponentActivity() {
 //                            Log.d("MainActivity", "Permission denied")
 //                        }
 //                    )
-
-                    PlayerScreen(viewModel = viewModel)
                 }
             }
         }
