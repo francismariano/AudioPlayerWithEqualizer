@@ -1,32 +1,62 @@
 package me.francis.audioplayerwithequalizer.permissions
 
 import android.Manifest
-import android.content.Context
+import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.activity.result.ActivityResultLauncher
+import android.util.Log
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
-class PermissionManager(
-    private val context: Context,
-    private val permissionLauncher: ActivityResultLauncher<String>,
-    private val onPermissionGranted: () -> Unit
+private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 1001
+
+@Composable
+fun NotificationPermissionHandler(
+    onPermissionGranted: () -> Unit,
+    onPermissionDenied: () -> Unit
 ) {
-    fun checkAudioPermission() {
+    val context = LocalContext.current
+    val activity = context as? Activity
+
+    LaunchedEffect(Unit) {
+        Log.d("NotificationPermissionHandler", "LaunchedEffect called")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            when {
+            Log.d("NotificationPermissionHandler", "Checking notification permission")
+            when (PackageManager.PERMISSION_GRANTED) {
                 ContextCompat.checkSelfPermission(
                     context,
-                    Manifest.permission.READ_MEDIA_AUDIO
-                ) == PackageManager.PERMISSION_GRANTED -> {
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) -> {
+                    Log.d("NotificationPermissionHandler", "Permission already granted")
                     onPermissionGranted()
                 }
+
                 else -> {
-                    permissionLauncher.launch(Manifest.permission.READ_MEDIA_AUDIO)
+                    Log.d("NotificationPermissionHandler", "Requesting notification permission")
+                    activity?.let {
+                        val shouldShowRationale =
+                            ActivityCompat.shouldShowRequestPermissionRationale(
+                                it,
+                                Manifest.permission.POST_NOTIFICATIONS
+                            )
+
+                        if (shouldShowRationale) {
+                            onPermissionDenied()
+                        } else {
+                            ActivityCompat.requestPermissions(
+                                it,
+                                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                                NOTIFICATION_PERMISSION_REQUEST_CODE
+                            )
+                        }
+                    }
                 }
             }
         } else {
-            // Android 12 ou menor
+            Log.d("NotificationPermissionHandler", "Permission already granted")
             onPermissionGranted()
         }
     }

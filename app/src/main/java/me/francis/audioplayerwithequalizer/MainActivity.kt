@@ -35,6 +35,16 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+
+//                    NotificationPermissionHandler(
+//                        onPermissionGranted = { Log.d("MainActivity", "Permission granted") },
+//                        onPermissionDenied = {
+//                            // aqui poderia mostrar uma mensagem ao usuário explicando que precisa
+//                            // da permissão para ver ver a notificação da música
+//                            Log.d("MainActivity", "Permission denied")
+//                        }
+//                    )
+
                     PlayerScreen(viewModel = viewModel)
                 }
             }
