@@ -12,17 +12,31 @@ import androidx.core.app.NotificationCompat
 
 class NotificationModule(
     private val context: Context,
-    private var mediaSession: MediaSessionCompat?,
     private val notificationTargetProvider: NotificationTargetProvider,
 ) {
     private val notificationManager: NotificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     private var currentNotification: Notification? = null
-
+    private var mediaSession: MediaSessionCompat? = null
 
     init {
         createNotificationChannel()
+        initializeMediaSession()
+    }
+
+    fun release() {
+        mediaSession?.release()
+    }
+
+    private fun initializeMediaSession() {
+        mediaSession = MediaSessionCompat(context, "MusicPlayerService").apply {
+            setFlags(
+                MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
+                        MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
+            )
+            setActive(true)
+        }
     }
 
     private fun createNotificationChannel() {

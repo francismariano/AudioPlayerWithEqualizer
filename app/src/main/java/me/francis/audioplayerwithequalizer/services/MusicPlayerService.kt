@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Binder
 import android.os.Bundle
 import android.os.IBinder
-import android.support.v4.media.session.MediaSessionCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -21,22 +20,12 @@ class MusicPlayerService : Service() {
     private val binder = LocalBinder()
     val playbackModule = PlaybackModuleImpl(this)
     private var isServiceStarted = false
-    private var mediaSession: MediaSessionCompat? = null
     private lateinit var notificationModule: NotificationModule
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    private fun initializeMediaSession() {
-        mediaSession = MediaSessionCompat(this, "MusicPlayerService").apply {
-            setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
-                    MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
-//            setCallback(MediaSessionCallback())
-            setActive(true)
-        }
-    }
-
     private fun initializeNotificationModule() {
-        notificationModule = NotificationModule(this, mediaSession, AppNotificationTargetProvider())
+        notificationModule = NotificationModule(this, AppNotificationTargetProvider())
     }
 
     // Binder para comunicação com a Activity
@@ -48,7 +37,6 @@ class MusicPlayerService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        initializeMediaSession()
         initializeNotificationModule()
 
         coroutineScope.launch {
@@ -115,22 +103,10 @@ class MusicPlayerService : Service() {
 
     override fun onDestroy() {
         playbackModule.release()
-        mediaSession?.release()
+        notificationModule.release()
         coroutineScope.cancel()
         super.onDestroy()
     }
-
-//    inner class MediaSessionCallback : MediaSessionCompat.Callback() {
-//        override fun onPlay() {
-//            Log.d("MusicPlayerService", "onPlay() called")
-//            // Implementar ação de play
-//        }
-//
-//        override fun onPause() {
-//            Log.d("MusicPlayerService", "onPause() called")
-//            // Implementar ação de pause
-//        }
-//    }
 
     companion object {
         const val CHANNEL_ID = "music_player_channel"
