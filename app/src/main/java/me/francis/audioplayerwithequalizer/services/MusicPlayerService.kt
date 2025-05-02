@@ -1,9 +1,5 @@
 package me.francis.audioplayerwithequalizer.services
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -12,22 +8,21 @@ import android.os.Binder
 import android.os.Bundle
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
-import android.util.Log
-import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import me.francis.audioplayerwithequalizer.MainActivity
+import me.francis.audioplayerwithequalizer.utils.AppNotificationTargetProvider
+import me.francis.notificationmodule.NotificationModule
 import me.francis.playbackmodule.PlaybackModuleImpl
 
 class MusicPlayerService : Service() {
     private val binder = LocalBinder()
     val playbackModule = PlaybackModuleImpl(this)
     private var isServiceStarted = false
-
     private var mediaSession: MediaSessionCompat? = null
+    private lateinit var notificationModule: NotificationModule
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
@@ -40,19 +35,8 @@ class MusicPlayerService : Service() {
         }
     }
 
-    // Criação do canal de notificação
-    private fun createNotificationChannel() {
-        Log.d("MusicPlayerService", "createNotificationChannel() called")
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            "Player de Música",
-            NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = "Notificação do player de música"
-        }
-
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(channel)
+    private fun initializeNotificationModule() {
+        notificationModule = NotificationModule(this, mediaSession, AppNotificationTargetProvider())
     }
 
     // Binder para comunicação com a Activity
@@ -64,20 +48,32 @@ class MusicPlayerService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
         initializeMediaSession()
+        initializeNotificationModule()
 
         coroutineScope.launch {
             playbackModule.playbackState.distinctUntilChanged { old, new ->
                 old.currentTrack == new.currentTrack && old.isPlaying == new.isPlaying
-            }.collect { updateNotification() }
+            }.collect { state ->
+                notificationModule.updateNotification(
+                    notificationModule.buildNotification(
+                        currentTrack = state.currentTrack,
+                        isPlaying = state.isPlaying,
+                    )
+                )
+            }
         }
-
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (!isServiceStarted) {
-            startForeground(NOTIFICATION_ID, buildNotification())
+
+            val notification = notificationModule.buildNotification(
+                currentTrack = playbackModule.playbackState.value.currentTrack,
+                isPlaying = playbackModule.playbackState.value.isPlaying,
+            )
+
+            startForeground(NOTIFICATION_ID, notification)
             isServiceStarted = true
         }
 
@@ -113,82 +109,8 @@ class MusicPlayerService : Service() {
         }
     }
 
-    fun updateNotification() {
-        val notification = buildNotification()
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(NOTIFICATION_ID, notification)
-
-        // Se for foreground service
-        startForeground(NOTIFICATION_ID, notification)
-    }
-
     private fun getFileNameFromUri(uri: Uri?): String {
         return uri?.lastPathSegment?.substringAfterLast('/') ?: "Arquivo desconhecido"
-    }
-
-    private fun buildNotification(): Notification {
-        Log.d("MusicPlayerService", "buildNotification() called")
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Player de Música")
-            .setContentText(getFileNameFromUri(playbackModule.playbackState.value.currentTrack))
-            .setSmallIcon(android.R.drawable.ic_dialog_alert)
-//            .setLargeIcon(getAlbumArtBitmap()) // Bitmap da capa do álbum
-            .setContentIntent(getContentIntent())
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setOngoing(true)
-            .setOnlyAlertOnce(true)
-            .setStyle(
-                androidx.media.app.NotificationCompat.MediaStyle()
-                    .setMediaSession(mediaSession?.sessionToken)
-                    .setShowActionsInCompactView(0, 1, 2)
-            )
-            .addAction(
-                NotificationCompat.Action(
-                    android.R.drawable.ic_media_previous,
-                    "Anterior",
-                    getPendingIntent(ACTION_SKIP_PREV)
-                )
-            )
-            .addAction(
-                NotificationCompat.Action(
-                    if (playbackModule.playbackState.value.isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
-                    if (playbackModule.playbackState.value.isPlaying) "Pausar" else "Tocar",
-                    getPendingIntent(if (playbackModule.playbackState.value.isPlaying) ACTION_PAUSE else ACTION_PLAY)
-                )
-            )
-            .addAction(
-                NotificationCompat.Action(
-                    android.R.drawable.ic_media_next,
-                    "Próxima",
-                    getPendingIntent(ACTION_SKIP_NEXT)
-                )
-            )
-            .build()
-    }
-
-    private fun getContentIntent(): PendingIntent {
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-        }
-        return PendingIntent.getActivity(
-            this,
-            0,
-            intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-    }
-
-    private fun getPendingIntent(action: String): PendingIntent {
-        val intent = Intent(this, MusicPlayerService::class.java).apply {
-            this.action = action
-        }
-        return PendingIntent.getService(
-            this,
-            action.hashCode(),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
     }
 
     override fun onDestroy() {

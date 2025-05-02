@@ -89,4 +89,5 @@ dependencies {
     implementation(libs.navigation)
     // modules
     implementation(project(":playbackmodule"))
+    implementation(project(":notificationmodule"))
 }
