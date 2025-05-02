@@ -14,6 +14,11 @@ import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import me.francis.audioplayerwithequalizer.MainActivity
 import me.francis.playbackmodule.PlaybackModuleImpl
 
@@ -24,11 +29,13 @@ class MusicPlayerService : Service() {
 
     private var mediaSession: MediaSessionCompat? = null
 
+    private val coroutineScope = CoroutineScope(Dispatchers.Default)
+
     private fun initializeMediaSession() {
         mediaSession = MediaSessionCompat(this, "MusicPlayerService").apply {
             setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
                     MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
-            setCallback(MediaSessionCallback())
+//            setCallback(MediaSessionCallback())
             setActive(true)
         }
     }
@@ -44,8 +51,8 @@ class MusicPlayerService : Service() {
             description = "Notificação do player de música"
         }
 
-        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        manager.createNotificationChannel(channel)
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
     }
 
     // Binder para comunicação com a Activity
@@ -59,6 +66,13 @@ class MusicPlayerService : Service() {
         super.onCreate()
         createNotificationChannel()
         initializeMediaSession()
+
+        coroutineScope.launch {
+            playbackModule.playbackState.distinctUntilChanged { old, new ->
+                old.currentTrack == new.currentTrack && old.isPlaying == new.isPlaying
+            }.collect { updateNotification() }
+        }
+
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -99,11 +113,24 @@ class MusicPlayerService : Service() {
         }
     }
 
+    fun updateNotification() {
+        val notification = buildNotification()
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(NOTIFICATION_ID, notification)
+
+        // Se for foreground service
+        startForeground(NOTIFICATION_ID, notification)
+    }
+
+    private fun getFileNameFromUri(uri: Uri?): String {
+        return uri?.lastPathSegment?.substringAfterLast('/') ?: "Arquivo desconhecido"
+    }
+
     private fun buildNotification(): Notification {
         Log.d("MusicPlayerService", "buildNotification() called")
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Player de Música")
-            .setContentText("Tocando agora")
+            .setContentText(getFileNameFromUri(playbackModule.playbackState.value.currentTrack))
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
 //            .setLargeIcon(getAlbumArtBitmap()) // Bitmap da capa do álbum
             .setContentIntent(getContentIntent())
@@ -111,9 +138,10 @@ class MusicPlayerService : Service() {
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
-            .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
-                .setMediaSession(mediaSession?.sessionToken)
-                .setShowActionsInCompactView(0, 1, 2)
+            .setStyle(
+                androidx.media.app.NotificationCompat.MediaStyle()
+                    .setMediaSession(mediaSession?.sessionToken)
+                    .setShowActionsInCompactView(0, 1, 2)
             )
             .addAction(
                 NotificationCompat.Action(
@@ -124,9 +152,9 @@ class MusicPlayerService : Service() {
             )
             .addAction(
                 NotificationCompat.Action(
-                    if (true) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
-                    if (true) "Pausar" else "Tocar",
-                    getPendingIntent(if (true) ACTION_PAUSE else ACTION_PLAY)
+                    if (playbackModule.playbackState.value.isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
+                    if (playbackModule.playbackState.value.isPlaying) "Pausar" else "Tocar",
+                    getPendingIntent(if (playbackModule.playbackState.value.isPlaying) ACTION_PAUSE else ACTION_PLAY)
                 )
             )
             .addAction(
@@ -166,18 +194,21 @@ class MusicPlayerService : Service() {
     override fun onDestroy() {
         playbackModule.release()
         mediaSession?.release()
+        coroutineScope.cancel()
         super.onDestroy()
     }
 
-    inner class MediaSessionCallback : MediaSessionCompat.Callback() {
-        override fun onPlay() {
-            // Implementar ação de play
-        }
-
-        override fun onPause() {
-            // Implementar ação de pause
-        }
-    }
+//    inner class MediaSessionCallback : MediaSessionCompat.Callback() {
+//        override fun onPlay() {
+//            Log.d("MusicPlayerService", "onPlay() called")
+//            // Implementar ação de play
+//        }
+//
+//        override fun onPause() {
+//            Log.d("MusicPlayerService", "onPause() called")
+//            // Implementar ação de pause
+//        }
+//    }
 
     companion object {
         const val CHANNEL_ID = "music_player_channel"
