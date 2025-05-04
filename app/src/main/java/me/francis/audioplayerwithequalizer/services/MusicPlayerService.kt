@@ -13,6 +13,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import me.francis.audioplayerwithequalizer.utils.AppNotificationTargetProvider
+import me.francis.equalizermodule.EqualizerModule
+import me.francis.equalizermodule.EqualizerModuleImpl
 import me.francis.notificationmodule.NotificationModule
 import me.francis.playbackmodule.PlaybackModuleImpl
 
@@ -21,7 +23,7 @@ class MusicPlayerService : Service() {
     private var isServiceStarted = false
     lateinit var playbackModule: PlaybackModuleImpl
     private lateinit var notificationModule: NotificationModule
-
+    lateinit var equalizerModule: EqualizerModule
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     private fun initializePlaybackModule() {
@@ -30,6 +32,10 @@ class MusicPlayerService : Service() {
 
     private fun initializeNotificationModule() {
         notificationModule = NotificationModule(this, AppNotificationTargetProvider())
+    }
+
+    private fun initializeEqualizerModule() {
+        equalizerModule = EqualizerModuleImpl()
     }
 
     // Binder para comunicação com a Activity
@@ -43,6 +49,7 @@ class MusicPlayerService : Service() {
         super.onCreate()
         initializePlaybackModule()
         initializeNotificationModule()
+        initializeEqualizerModule()
 
         coroutineScope.launch {
             playbackModule.playbackState.distinctUntilChanged { old, new ->
@@ -99,6 +106,20 @@ class MusicPlayerService : Service() {
                 val uris = intent.getParcelableArrayListExtra<Uri>(EXTRA_PLAYLIST)
                 uris?.let { playbackModule.setPlaylist(it) }
             }
+
+            ACTION_SET_GLOBAL_GAIN -> intent.getFloatExtra(EXTRA_GAIN, 0f).let {
+                equalizerModule.setGlobalGain(it)
+            }
+
+            ACTION_SET_BAND_GAIN -> {
+                val band = intent.getIntExtra(EXTRA_BAND, 0)
+                val gain = intent.getFloatExtra(EXTRA_GAIN, 0f)
+                equalizerModule.setBandGain(band, gain)
+            }
+
+            ACTION_TOGGLE_EQUALIZER -> equalizerModule.toggleEqualizer()
+
+            ACTION_RESET_EQUALIZER -> equalizerModule.resetEqualizer()
         }
     }
 
@@ -122,11 +143,17 @@ class MusicPlayerService : Service() {
         const val ACTION_SKIP_PREV = "com.example.mediaplayer.SKIP_PREV"
         const val ACTION_SEEK_TO = "com.example.mediaplayer.SEEK_TO"
         const val ACTION_SET_PLAYLIST = "com.example.mediaplayer.SET_PLAYLIST"
+        const val ACTION_SET_GLOBAL_GAIN = "com.example.mediaplayer.SET_GLOBAL_GAIN"
+        const val ACTION_SET_BAND_GAIN = "com.example.mediaplayer.SET_BAND_GAIN"
+        const val ACTION_TOGGLE_EQUALIZER = "com.example.mediaplayer.TOGGLE_EQUALIZER"
+        const val ACTION_RESET_EQUALIZER = "com.example.mediaplayer.RESET_EQUALIZER"
 
         // Extras
         const val EXTRA_POSITION = "extra_position"
         const val EXTRA_INDEX = "extra_index"
         const val EXTRA_PLAYLIST = "extra_playlist"
+        const val EXTRA_GAIN = "extra_gain"
+        const val EXTRA_BAND = "extra_band"
 
         fun startService(context: Context, action: String, extras: Bundle? = null) {
             val intent = Intent(context, MusicPlayerService::class.java).apply {

@@ -89,4 +89,5 @@ dependencies {
     // modules
     implementation(project(":playbackmodule"))
     implementation(project(":notificationmodule"))
+    implementation(project(":equalizermodule"))
 }

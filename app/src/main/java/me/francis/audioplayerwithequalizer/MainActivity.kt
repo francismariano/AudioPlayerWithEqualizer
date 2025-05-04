@@ -34,12 +34,14 @@ import me.francis.audioplayerwithequalizer.navigation.NavManager
 import me.francis.audioplayerwithequalizer.permissions.PermissionState
 import me.francis.audioplayerwithequalizer.permissions.PermissionsHandler
 import me.francis.audioplayerwithequalizer.ui.theme.AudioPlayerWithEqualizerTheme
+import me.francis.audioplayerwithequalizer.viewModels.EqualizerViewModel
 import me.francis.audioplayerwithequalizer.viewModels.MusicPlayerController
 import me.francis.audioplayerwithequalizer.viewModels.MusicPlayerViewModel
 
 class MainActivity : ComponentActivity() {
     private lateinit var playerController: MusicPlayerController
     private lateinit var musicPlayerViewModel: MusicPlayerViewModel
+    private lateinit var equalizerViewModel: EqualizerViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,13 +53,21 @@ class MainActivity : ComponentActivity() {
             MusicPlayerViewModelFactory(application, playerController)
         )[MusicPlayerViewModel::class.java]
 
+        equalizerViewModel = ViewModelProvider(
+            this,
+            EqualizerViewModelFactory(application, playerController)
+        )[EqualizerViewModel::class.java]
+
         setContent {
             AudioPlayerWithEqualizerTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    PermissionAwareApp(musicPlayerViewModel)
+                    PermissionAwareApp(
+                        equalizerViewModel = equalizerViewModel,
+                        musicPlayerViewModel = musicPlayerViewModel
+                    )
                 }
             }
         }
@@ -65,7 +75,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun PermissionAwareApp(musicPlayerViewModel: MusicPlayerViewModel) {
+private fun PermissionAwareApp(
+    equalizerViewModel: EqualizerViewModel,
+    musicPlayerViewModel: MusicPlayerViewModel
+) {
 
     var currentPermission by remember { mutableStateOf("") }
     var permissionState by remember { mutableStateOf<PermissionState>(PermissionState.Loading) }
@@ -95,7 +108,10 @@ private fun PermissionAwareApp(musicPlayerViewModel: MusicPlayerViewModel) {
 
         is PermissionState.Granted -> {
             // Agora sim, todas permissões concedidas, pode navegar
-            NavManager(musicPlayerViewModel)
+            NavManager(
+                equalizerViewModel = equalizerViewModel,
+                musicPlayerViewModel = musicPlayerViewModel
+            )
         }
 
         is PermissionState.Denied -> {
@@ -117,17 +133,21 @@ private fun PermissionAwareApp(musicPlayerViewModel: MusicPlayerViewModel) {
                 confirmButton = {
                     TextButton(onClick = {
                         val canAskAgain = activity?.let {
-                            ActivityCompat.shouldShowRequestPermissionRationale(it, currentPermission)
-                        } ?: false
+                            ActivityCompat.shouldShowRequestPermissionRationale(
+                                it,
+                                currentPermission
+                            )
+                        } == true
 
                         if (canAskAgain) {
                             // Solicita novamente a permissão
                             permissionLauncher.launch(currentPermission)
                         } else {
                             // Abre as configurações do app
-                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                data = Uri.fromParts("package", context.packageName, null)
-                            }
+                            val intent =
+                                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                    data = Uri.fromParts("package", context.packageName, null)
+                                }
                             context.startActivity(intent)
                         }
 
@@ -150,6 +170,22 @@ class MusicPlayerViewModelFactory(
         if (modelClass.isAssignableFrom(MusicPlayerViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
             return MusicPlayerViewModel(
+                application,
+                playerController
+            ) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
+class EqualizerViewModelFactory(
+    private val application: Application,
+    private val playerController: MusicPlayerController,
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(EqualizerViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return EqualizerViewModel(
                 application,
                 playerController
             ) as T
