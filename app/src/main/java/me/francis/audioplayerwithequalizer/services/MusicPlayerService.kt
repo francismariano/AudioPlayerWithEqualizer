@@ -18,11 +18,15 @@ import me.francis.playbackmodule.PlaybackModuleImpl
 
 class MusicPlayerService : Service() {
     private val binder = LocalBinder()
-    val playbackModule = PlaybackModuleImpl(this)
     private var isServiceStarted = false
+    lateinit var playbackModule: PlaybackModuleImpl
     private lateinit var notificationModule: NotificationModule
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
+
+    private fun initializePlaybackModule() {
+        playbackModule = PlaybackModuleImpl(this)
+    }
 
     private fun initializeNotificationModule() {
         notificationModule = NotificationModule(this, AppNotificationTargetProvider())
@@ -37,6 +41,7 @@ class MusicPlayerService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        initializePlaybackModule()
         initializeNotificationModule()
 
         coroutineScope.launch {
@@ -95,10 +100,6 @@ class MusicPlayerService : Service() {
                 uris?.let { playbackModule.setPlaylist(it) }
             }
         }
-    }
-
-    private fun getFileNameFromUri(uri: Uri?): String {
-        return uri?.lastPathSegment?.substringAfterLast('/') ?: "Arquivo desconhecido"
     }
 
     override fun onDestroy() {
