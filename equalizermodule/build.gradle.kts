@@ -12,6 +12,24 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+
+        externalNativeBuild {
+            cmake {
+                cppFlags += "-std=c++17"
+                arguments += "-DANDROID_STL=c++_shared"
+            }
+        }
+
+        ndk {
+            abiFilters += setOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path = file("CMakeLists.txt")
+            version = "3.31.6"
+        }
     }
 
     buildTypes {
@@ -30,6 +48,7 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+    ndkVersion = "27.0.12077973"
 }
 
 dependencies {
