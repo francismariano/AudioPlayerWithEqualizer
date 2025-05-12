@@ -17,7 +17,6 @@ open class PlaybackModuleImpl(
     private val context: Context,
     open var mediaPlayer: MediaPlayer = MediaPlayer() // permite mock nos testes
 ) : PlaybackModule {
-    //    open var mediaPlayer: MediaPlayer = MediaPlayer()
     private val _playbackState = MutableStateFlow(PlaybackState())
     val playbackState: StateFlow<PlaybackState> = _playbackState
     private var currentPlaylist: List<Uri> = emptyList()

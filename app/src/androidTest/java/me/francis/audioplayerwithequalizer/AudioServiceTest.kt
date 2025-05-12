@@ -1,10 +1,8 @@
 package me.francis.audioplayerwithequalizer
 
-import android.app.Notification
 import android.app.NotificationManager
 import android.content.Context
 import android.media.MediaPlayer
-import android.media.session.MediaSession
 import android.net.Uri
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
@@ -13,7 +11,6 @@ import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
 import me.francis.audioplayerwithequalizer.utils.AppNotificationTargetProvider
 import me.francis.notificationmodule.NotificationModule
-import me.francis.notificationmodule.NotificationTargetProvider
 import me.francis.playbackmodule.PlaybackModuleImpl
 import org.junit.Before
 import org.junit.Test
@@ -30,8 +27,10 @@ class AudioServiceTest {
 
     @Mock
     private val context: Context = ApplicationProvider.getApplicationContext<Context>()
+
     @Mock
     lateinit var mockMediaPlayer: MediaPlayer
+
     @Mock
     lateinit var mockNotificationManager: NotificationManager
 
@@ -43,15 +42,19 @@ class AudioServiceTest {
     fun setUp() {
         MockitoAnnotations.openMocks(this)
         val context: Context = ApplicationProvider.getApplicationContext<Context>()
-        audioService = object : PlaybackModuleImpl(context = context, mediaPlayer = mockMediaPlayer){
-            override var mediaPlayer: MediaPlayer
-                get() = super.mediaPlayer
-                set(value) {}
+        audioService =
+            object : PlaybackModuleImpl(context = context, mediaPlayer = mockMediaPlayer) {
+                override var mediaPlayer: MediaPlayer
+                    get() = super.mediaPlayer
+                    set(value) {}
 
-        }
+            }
         audioService!!.mediaPlayer = mockMediaPlayer
 
-        notificationService = object : NotificationModule(context = context, notificationTargetProvider = AppNotificationTargetProvider()){
+        notificationService = object : NotificationModule(
+            context = context,
+            notificationTargetProvider = AppNotificationTargetProvider()
+        ) {
             override var notificationManager: NotificationManager
                 get() = super.notificationManager
                 set(value) {}
@@ -62,15 +65,6 @@ class AudioServiceTest {
     @Test
     fun testPlayAudio() {
         try {
-//           // V1
-////            audioService!!.setDataSource(musicUri)
-//            audioService!!.play()
-//            verify(mockMediaPlayer).reset()
-//            verify(mockMediaPlayer).setDataSource(musicUri.path)
-//            verify(mockMediaPlayer).prepare()
-//            verify(mockMediaPlayer).start()
-//          // V2
-//            audioService!!.mediaPlayer = mockMediaPlayer //???
             audioService!!.setDataSource(musicUri)
             audioService!!.play()
             assertEquals(true, audioService!!.playbackState.value.isPlaying)
@@ -82,11 +76,6 @@ class AudioServiceTest {
     @Test
     fun testPauseAudio() {
         try {
-            // V1
-//            `when`(mockMediaPlayer.isPlaying).thenReturn(true)
-//            audioService!!.pause()
-//            verify(mockMediaPlayer.pause())
-            // V2
             audioService!!.mediaPlayer = mockMediaPlayer
             audioService!!.setDataSource(musicUri)
             audioService!!.pause()
@@ -99,13 +88,6 @@ class AudioServiceTest {
     @Test
     fun testStopAudio() {
         try {
-            // V1
-//            verify(mockMediaPlayer.reset())
-//            verify(mockMediaPlayer.setDataSource(context, musicUri))
-//            verify(mockMediaPlayer.prepare())
-//            verify(mockMediaPlayer.start())
-//            verify(mockMediaPlayer.stop())
-            // V2
             audioService!!.setDataSource(musicUri)
             audioService!!.stop()
             assertEquals(false, audioService!!.playbackState.value.isReady)
@@ -117,14 +99,15 @@ class AudioServiceTest {
     @Test
     fun testCreateNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            notificationService!!.createNotificationChannel()
-            verify(mockNotificationManager).createNotificationChannel(any())
+            assertEquals(true, notificationService!!.createNotificationChannel())
         }
     }
+
     @Test
     fun testCreateNotification() {
         `when`(mockMediaPlayer.isPlaying).thenReturn(true)
-        val notification = notificationService!!.buildNotification(currentTrack = musicUri, isPlaying = true)
+        val notification =
+            notificationService!!.buildNotification(currentTrack = musicUri, isPlaying = true)
         assertNotNull(notification)
     }
 }

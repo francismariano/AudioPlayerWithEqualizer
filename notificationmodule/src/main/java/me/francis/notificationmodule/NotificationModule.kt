@@ -39,17 +39,22 @@ open class NotificationModule(
         }
     }
 
-    fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            "Player de Música",
-            NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = "Notificações do player de música"
-            setShowBadge(false)
-            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+    fun createNotificationChannel(): Boolean {
+        try {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "Player de Música",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Notificações do player de música"
+                setShowBadge(false)
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            }
+            notificationManager.createNotificationChannel(channel)
+            return true
+        } catch (e: Exception) {
+            return false
         }
-        notificationManager.createNotificationChannel(channel)
     }
 
     fun buildNotification(
