@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+//    alias(libs.plugins.junit5.android)
 }
 
 android {
@@ -65,6 +66,43 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests.all {
+            it.useJUnitPlatform()
+        }
+
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+
+
+        emulatorSnapshots {
+            maxSnapshotsForTestFailures = 2
+        }
+    }
+
+//    packagingOptions {
+//        resources {
+//            excludes += "META-INF/LICENSE.md"
+//            // You might also need to exclude other META-INF files
+//            // if similar conflicts arise with other files
+//            // excludes += 'META-INF/NOTICE.md'
+//            // excludes += 'META-INF/*.kotlin_module'
+//        }
+//    }
+
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/LICENSE-notice.md",
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE.txt",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt"
+            )
+        }
+    }
+
 }
 
 dependencies {
@@ -77,13 +115,22 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.bundles.compose.icons)
-    testImplementation(libs.junit)
+    androidTestImplementation(libs.junit)
+    androidTestImplementation (libs.junit.junit.jupiter.api)
+    androidTestImplementation (libs.junit.jupiter.engine)
+//    androidTestImplementation (libs.mockito.core)
+    androidTestImplementation (libs.mockito.android)
+    androidTestImplementation (libs.mockito.kotlin)
+//    androidTestImplementation(libs.mockito.junit.jupiter)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+    androidTestImplementation("org.robolectric:robolectric:4.13")
+
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
     // nav controller
     implementation(libs.navigation)
     // modules
@@ -91,3 +138,5 @@ dependencies {
     implementation(project(":notificationmodule"))
     implementation(project(":equalizermodule"))
 }
+
+

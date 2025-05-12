@@ -13,8 +13,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
 
-class PlaybackModuleImpl(private val context: Context) : PlaybackModule {
-    private val mediaPlayer: MediaPlayer = MediaPlayer()
+open class PlaybackModuleImpl(
+    private val context: Context,
+    open var mediaPlayer: MediaPlayer = MediaPlayer() // permite mock nos testes
+) : PlaybackModule {
+    //    open var mediaPlayer: MediaPlayer = MediaPlayer()
     private val _playbackState = MutableStateFlow(PlaybackState())
     val playbackState: StateFlow<PlaybackState> = _playbackState
     private var currentPlaylist: List<Uri> = emptyList()
@@ -24,6 +27,7 @@ class PlaybackModuleImpl(private val context: Context) : PlaybackModule {
 
     init {
         mediaPlayer.setOnPreparedListener {
+            Log.d("MediaPlayer*", "preparedListener")
             _playbackState.value = _playbackState.value.copy(
                 duration = it.duration,
                 isReady = true,
@@ -143,5 +147,9 @@ class PlaybackModuleImpl(private val context: Context) : PlaybackModule {
         Log.d("MediaPlayer*", "release() called")
         mediaPlayer.release()
         scope.cancel()
+    }
+
+    fun getCurrentTrackIndex(): Int {
+        return currentTrackIndex
     }
 }

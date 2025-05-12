@@ -10,11 +10,11 @@ import android.net.Uri
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationCompat
 
-class NotificationModule(
+open class NotificationModule(
     private val context: Context,
     private val notificationTargetProvider: NotificationTargetProvider,
 ) {
-    private val notificationManager: NotificationManager =
+    open var notificationManager: NotificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     private var currentNotification: Notification? = null
@@ -39,7 +39,7 @@ class NotificationModule(
         }
     }
 
-    private fun createNotificationChannel() {
+    fun createNotificationChannel() {
         val channel = NotificationChannel(
             CHANNEL_ID,
             "Player de Música",
